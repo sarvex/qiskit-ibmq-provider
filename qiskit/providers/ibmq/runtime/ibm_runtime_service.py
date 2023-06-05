@@ -123,7 +123,7 @@ class IBMRuntimeService:
         for prog in programs:
             print("="*50)
             if detailed:
-                print(str(prog))
+                print(prog)
             else:
                 print(f"{prog.program_id}:",)
                 print(f"  Name: {prog.name}")
@@ -292,14 +292,17 @@ class IBMRuntimeService:
                                                 log_level=options.log_level)
 
         backend = self._provider.get_backend(backend_name)
-        job = RuntimeJob(backend=backend,
-                         api_client=self._api_client,
-                         credentials=self._provider.credentials,
-                         job_id=response['id'], program_id=program_id, params=inputs,
-                         user_callback=callback,
-                         result_decoder=result_decoder,
-                         image=options.image)
-        return job
+        return RuntimeJob(
+            backend=backend,
+            api_client=self._api_client,
+            credentials=self._provider.credentials,
+            job_id=response['id'],
+            program_id=program_id,
+            params=inputs,
+            user_callback=callback,
+            result_decoder=result_decoder,
+            image=options.image,
+        )
 
     def upload_program(
             self,
@@ -653,10 +656,7 @@ class IBMRuntimeService:
 
         params = raw_data.get('params', {})
         if isinstance(params, list):
-            if len(params) > 0:
-                params = params[0]
-            else:
-                params = {}
+            params = params[0] if len(params) > 0 else {}
         if not isinstance(params, str):
             params = json.dumps(params)
 

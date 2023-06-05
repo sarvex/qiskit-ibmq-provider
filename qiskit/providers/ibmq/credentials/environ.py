@@ -39,11 +39,10 @@ def read_credentials_from_environ() -> Dict[HubGroupProject, Credentials]:
     if not (os.getenv('QE_TOKEN') and os.getenv('QE_URL')):
         return {}
 
-    # Build the credentials based on environment variables.
-    credentials_dict = {}
-    for envar_name, credential_key in VARIABLES_MAP.items():
-        if os.getenv(envar_name):
-            credentials_dict[credential_key] = os.getenv(envar_name)
-
+    credentials_dict = {
+        credential_key: os.getenv(envar_name)
+        for envar_name, credential_key in VARIABLES_MAP.items()
+        if os.getenv(envar_name)
+    }
     credentials = Credentials(**credentials_dict)  # type: ignore[arg-type]
     return {credentials.unique_id(): credentials}

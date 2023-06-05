@@ -32,8 +32,12 @@ class MockProxyServer:
     def start(self):
         """Start the server."""
         self._logger.debug("Starting proxy server at port %s", self.PROXY_PORT)
-        command = ['pproxy', '-v', '-l', 'http://{}:{}'.format(
-            self.PROXY_IP_ADDRESS, self.PROXY_PORT)]
+        command = [
+            'pproxy',
+            '-v',
+            '-l',
+            f'http://{self.PROXY_IP_ADDRESS}:{self.PROXY_PORT}',
+        ]
         self.proxy_process = subprocess.Popen(command, stdout=subprocess.PIPE)
         self._test_case.addCleanup(self.stop)
 

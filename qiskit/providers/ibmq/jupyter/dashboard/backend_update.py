@@ -56,9 +56,9 @@ def update_backend_info(device_list: wid.VBox,
 
                     if cur_rsvr_interval >= reservation_interval:
                         cur_rsvr_interval = 0
-                        next_resrv = get_next_reservation(backend_pane._backend)
-                        reservation_wid = backend_pane._reservation_val_wid
-                        if next_resrv:
+                        if next_resrv := get_next_reservation(
+                            backend_pane._backend
+                        ):
                             start_dt_str = duration_difference(next_resrv.start_datetime)
                             new_resrv_val = RESERVATION_STR.format(
                                 start_dt=start_dt_str, duration=next_resrv.duration)
@@ -67,6 +67,7 @@ def update_backend_info(device_list: wid.VBox,
                         else:
                             new_resrv_val = RESERVATION_NONE
 
+                        reservation_wid = backend_pane._reservation_val_wid
                         if reservation_wid.value != new_resrv_val:
                             reservation_wid.value = new_resrv_val
 

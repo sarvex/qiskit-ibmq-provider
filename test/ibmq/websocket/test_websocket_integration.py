@@ -210,8 +210,9 @@ class TestWebsocketIntegration(IBMQTestCase):
         MockProxyServer(self, self.log).start()
         job = self.sim_backend.run(self.bell, shots=1)
 
-        invalid_proxy = {'https': 'http://{}:{}'.format(MockProxyServer.PROXY_IP_ADDRESS,
-                                                        MockProxyServer.INVALID_PROXY_PORT)}
+        invalid_proxy = {
+            'https': f'http://{MockProxyServer.PROXY_IP_ADDRESS}:{MockProxyServer.INVALID_PROXY_PORT}'
+        }
         with use_proxies(self.provider, invalid_proxy):
             with self.assertLogs('qiskit.providers.ibmq', 'INFO') as log_cm:
                 job.wait_for_final_state()

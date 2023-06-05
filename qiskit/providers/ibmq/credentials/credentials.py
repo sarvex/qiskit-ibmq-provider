@@ -163,13 +163,12 @@ def _unify_ibmq_url(
     base_url = url
     if regex_match:
         base_url, hub, group, project = regex_match.groups()
+    elif hub and group and project:
+        # Assume it is an IBMQ URL, and update the url.
+        url = TEMPLATE_IBMQ_HUBS.format(prefix=url, hub=hub, group=group,
+                                        project=project)
     else:
-        if hub and group and project:
-            # Assume it is an IBMQ URL, and update the url.
-            url = TEMPLATE_IBMQ_HUBS.format(prefix=url, hub=hub, group=group,
-                                            project=project)
-        else:
-            # Cleanup the hub, group and project, without modifying the url.
-            hub = group = project = None
+        # Cleanup the hub, group and project, without modifying the url.
+        hub = group = project = None
 
     return url, base_url, hub, group, project

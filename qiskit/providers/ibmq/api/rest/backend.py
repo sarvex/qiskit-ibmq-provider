@@ -41,7 +41,7 @@ class Backend(RestAdapterBase):
             url_prefix: Base URL.
         """
         self.backend_name = backend_name
-        super().__init__(session, '{}/devices/{}'.format(url_prefix, backend_name))
+        super().__init__(session, f'{url_prefix}/devices/{backend_name}')
 
     def properties(self, datetime: Optional[datetime] = None) -> Dict[str, Any]:
         """Return backend properties.

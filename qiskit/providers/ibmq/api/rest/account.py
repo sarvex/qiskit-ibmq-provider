@@ -113,11 +113,7 @@ class Account(RestAdapterBase):
 
         order = 'DESC' if descending else 'ASC'
 
-        query = {
-            'order': 'creationDate ' + order,
-            'limit': limit,
-            'skip': skip,
-        }
+        query = {'order': f'creationDate {order}', 'limit': limit, 'skip': skip}
         if extra_filter:
             query['where'] = extra_filter
 
@@ -153,10 +149,10 @@ class Account(RestAdapterBase):
         order = 'DESC' if descending else 'ASC'
 
         query = {
-            'order': 'creationDate ' + order,
+            'order': f'creationDate {order}',
             'limit': limit,
             'skip': skip,
-            'fields': {'id': True, 'liveDataEnabled': True, 'creationDate': True}
+            'fields': {'id': True, 'liveDataEnabled': True, 'creationDate': True},
         }
         if extra_filter:
             query['where'] = extra_filter
@@ -165,9 +161,7 @@ class Account(RestAdapterBase):
             logger.debug("Endpoint: %s. Method: GET. Request Data: {'filter': %s}",
                          url, filter_data(query))
 
-        data = self.session.get(url, params={'filter': json.dumps(query)}).json()
-
-        return data
+        return self.session.get(url, params={'filter': json.dumps(query)}).json()
 
     def create_remote_job(
             self,

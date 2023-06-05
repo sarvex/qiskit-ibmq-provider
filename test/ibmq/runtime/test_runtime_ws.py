@@ -174,10 +174,11 @@ class TestRuntimeWebsocketClient(IBMQTestCase):
         """Get a runtime job."""
         cred = Credentials(token="my_token", url="",
                            services={"runtime": MockWsServer.VALID_WS_URL})
-        job = RuntimeJob(backend=FakeQasmSimulator(),
-                         api_client=BaseFakeRuntimeClient(),
-                         credentials=cred,
-                         job_id=job_id,
-                         program_id="my-program",
-                         user_callback=callback)
-        return job
+        return RuntimeJob(
+            backend=FakeQasmSimulator(),
+            api_client=BaseFakeRuntimeClient(),
+            credentials=cred,
+            job_id=job_id,
+            program_id="my-program",
+            user_callback=callback,
+        )

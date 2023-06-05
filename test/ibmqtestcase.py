@@ -35,7 +35,7 @@ class IBMQTestCase(BaseQiskitTestCase):
     def setUpClass(cls):
         super().setUpClass()
         cls.log = logging.getLogger(cls.__name__)
-        filename = '%s.log' % os.path.splitext(inspect.getfile(cls))[0]
+        filename = f'{os.path.splitext(inspect.getfile(cls))[0]}.log'
         setup_test_logging(cls.log, filename)
         cls._set_logging_level(logging.getLogger(IBMQ_PROVIDER_LOGGER_NAME))
 
@@ -84,13 +84,7 @@ class IBMQTestCase(BaseQiskitTestCase):
     def tearDown(self) -> None:
         """Test level tear down."""
         super().tearDown()
-        failed = False
-        # It's surprisingly difficult to find out whether the test failed.
-        # Using a private attribute is not ideal but it'll have to do.
-        for _, exc_info in self._outcome.errors:
-            if exc_info is not None:
-                failed = True
-
+        failed = any(exc_info is not None for _, exc_info in self._outcome.errors)
         if not failed:
             for client, job_id in self._jobs:
                 try:

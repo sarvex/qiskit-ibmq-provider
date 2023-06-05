@@ -366,10 +366,7 @@ def main(backend, user_messenger, **kwargs):
 
     def test_retrieve_jobs_limit(self):
         """Test retrieving jobs with limit."""
-        jobs = []
-        for _ in range(3):
-            jobs.append(self._run_program())
-
+        jobs = [self._run_program() for _ in range(3)]
         rjobs = self.provider.runtime.jobs(limit=2)
         self.assertEqual(len(rjobs), 2)
         job_ids = {job.job_id() for job in jobs}
@@ -717,7 +714,7 @@ def main(backend, user_messenger, **kwargs):
     @classmethod
     def _get_program_name(cls):
         """Return a unique program name."""
-        return cls.PROGRAM_PREFIX + "_" + uuid.uuid4().hex
+        return f"{cls.PROGRAM_PREFIX}_{uuid.uuid4().hex}"
 
     def _assert_complex_types_equal(self, expected, received):
         """Verify the received data in complex types is expected."""

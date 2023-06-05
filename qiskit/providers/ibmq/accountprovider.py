@@ -360,10 +360,7 @@ class AccountProvider(Provider):
         if name not in self._services:
             raise IBMQInputValueError(f"Unknown service {name} specified.")
 
-        if self._services[name] is None:
-            return False
-
-        return True
+        return self._services[name] is not None
 
     @property
     def backend(self) -> IBMQBackendService:
@@ -414,8 +411,6 @@ class AccountProvider(Provider):
         return self.credentials == other.credentials
 
     def __repr__(self) -> str:
-        credentials_info = "hub='{}', group='{}', project='{}'".format(
-            self.credentials.hub, self.credentials.group, self.credentials.project)
+        credentials_info = f"hub='{self.credentials.hub}', group='{self.credentials.group}', project='{self.credentials.project}'"
 
-        return "<{} for IBMQ({})>".format(
-            self.__class__.__name__, credentials_info)
+        return f"<{self.__class__.__name__} for IBMQ({credentials_info})>"

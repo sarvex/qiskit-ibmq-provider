@@ -82,7 +82,7 @@ class ExperimentClient(BaseClient):
         Returns:
             A list of experiments and the marker, if applicable.
         """
-        resp = self.base_api.experiments(
+        return self.base_api.experiments(
             limit=limit,
             marker=marker,
             backend_name=backend_name,
@@ -90,12 +90,16 @@ class ExperimentClient(BaseClient):
             start_time=start_time,
             device_components=device_components,
             tags=tags,
-            hub=hub, group=group, project=project,
-            exclude_public=exclude_public, public_only=public_only,
-            exclude_mine=exclude_mine, mine_only=mine_only,
+            hub=hub,
+            group=group,
+            project=project,
+            exclude_public=exclude_public,
+            public_only=public_only,
+            exclude_mine=exclude_mine,
+            mine_only=mine_only,
             parent_id=parent_id,
-            sort_by=sort_by)
-        return resp
+            sort_by=sort_by,
+        )
 
     def experiment_get(self, experiment_id: str) -> str:
         """Get a specific experiment.
@@ -249,7 +253,7 @@ class ExperimentClient(BaseClient):
         Returns:
             A list of analysis results and the marker, if applicable.
         """
-        resp = self.base_api.analysis_results(
+        return self.base_api.analysis_results(
             limit=limit,
             marker=marker,
             backend_name=backend_name,
@@ -259,9 +263,8 @@ class ExperimentClient(BaseClient):
             quality=quality,
             verified=verified,
             tags=tags,
-            sort_by=sort_by
+            sort_by=sort_by,
         )
-        return resp
 
     def analysis_result_upload(self, result: str) -> Dict:
         """Upload an analysis result.

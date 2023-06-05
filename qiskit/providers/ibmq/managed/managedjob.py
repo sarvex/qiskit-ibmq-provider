@@ -127,9 +127,11 @@ class ManagedJob:
                         **run_config)
                 except IBMQBackendJobLimitError:
                     final_states = [state.value for state in API_JOB_FINAL_STATES]
-                    oldest_running = backend.jobs(limit=1, descending=False,
-                                                  db_filter={"status": {"nin": final_states}})
-                    if oldest_running:
+                    if oldest_running := backend.jobs(
+                        limit=1,
+                        descending=False,
+                        db_filter={"status": {"nin": final_states}},
+                    ):
                         oldest_running = oldest_running[0]
                         logger.warning("Job limit reached, waiting for job %s to finish "
                                        "before submitting the next one.",
@@ -142,8 +144,9 @@ class ManagedJob:
                                          "job %s to finish: %s", oldest_running.job_id(), err)
 
         except Exception as err:  # pylint: disable=broad-except
-            warnings.warn("Unable to submit job for experiments {}-{}: {}".format(
-                self.start_index, self.end_index, err))
+            warnings.warn(
+                f"Unable to submit job for experiments {self.start_index}-{self.end_index}: {err}"
+            )
             self.submit_error = err
         finally:
             submit_lock.release()
@@ -166,8 +169,8 @@ class ManagedJob:
             return self.job.status()
         except JobError as err:
             warnings.warn(
-                "Unable to retrieve job status for experiments {}-{}, job ID={}: {} ".format(
-                    self.start_index, self.end_index, self.job.job_id(), err))
+                f"Unable to retrieve job status for experiments {self.start_index}-{self.end_index}, job ID={self.job.job_id()}: {err} "
+            )
 
         return None
 
@@ -200,8 +203,8 @@ class ManagedJob:
                 raise
             except JobError as err:
                 warnings.warn(
-                    "Unable to retrieve job result for experiments {}-{}, job ID={}: {} ".format(
-                        self.start_index, self.end_index, self.job.job_id(), err))
+                    f"Unable to retrieve job result for experiments {self.start_index}-{self.end_index}, job ID={self.job.job_id()}: {err} "
+                )
 
         return result
 
@@ -243,7 +246,7 @@ class ManagedJob:
             return self.job.qobj()
         except JobError as err:
             warnings.warn(
-                "Unable to retrieve qobj for experiments {}-{}, job ID={}: {} ".format(
-                    self.start_index, self.end_index, self.job.job_id(), err))
+                f"Unable to retrieve qobj for experiments {self.start_index}-{self.end_index}, job ID={self.job.job_id()}: {err} "
+            )
 
         return None

@@ -100,7 +100,7 @@ class TestIBMQJobAttributes(IBMQTestCase):
         self.assertIn(job_id, retrieved_job_ids)
 
         # Check using regular expressions.
-        job_name_regex = '^{}$'.format(job_name)
+        job_name_regex = f'^{job_name}$'
         retrieved_jobs = self.provider.backend.jobs(
             backend_name=self.sim_backend.name(), job_name=job_name_regex,
             start_datetime=self.last_week)
@@ -114,10 +114,7 @@ class TestIBMQJobAttributes(IBMQTestCase):
         initial_job_name = str(time.time()).replace('.', '')
         job = self.sim_backend.run(self.bell, job_name=initial_job_name)
 
-        new_names_to_test = [
-            '',  # empty string as name.
-            '{}_new'.format(str(time.time()).replace('.', ''))  # unique name.
-        ]
+        new_names_to_test = ['', f"{str(time.time()).replace('.', '')}_new"]
         for new_name in new_names_to_test:
             with self.subTest(new_name=new_name):
                 _ = job.update_name(new_name)  # Update the job name.
@@ -125,9 +122,11 @@ class TestIBMQJobAttributes(IBMQTestCase):
                 # Wait before updating again.
                 time.sleep(2)
                 job.refresh()
-                self.assertEqual(job.name(), new_name,
-                                 'Updating the name for job {} from "{}" to "{}" '
-                                 'was unsuccessful.'.format(job.job_id(), job.name(), new_name))
+                self.assertEqual(
+                    job.name(),
+                    new_name,
+                    f'Updating the name for job {job.job_id()} from "{job.name()}" to "{new_name}" was unsuccessful.',
+                )
 
     @skip('outdated')
     def test_duplicate_job_name(self):
@@ -143,8 +142,9 @@ class TestIBMQJobAttributes(IBMQTestCase):
             backend_name=self.sim_backend.name(), job_name=job_name,
             start_datetime=self.last_week)
 
-        self.assertEqual(len(retrieved_jobs), 2,
-                         "More than 2 jobs retrieved: {}".format(retrieved_jobs))
+        self.assertEqual(
+            len(retrieved_jobs), 2, f"More than 2 jobs retrieved: {retrieved_jobs}"
+        )
         retrieved_job_ids = {job.job_id() for job in retrieved_jobs}
         self.assertEqual(job_ids, retrieved_job_ids)
         for job in retrieved_jobs:
@@ -219,10 +219,10 @@ class TestIBMQJobAttributes(IBMQTestCase):
         # datetime, after the job is done running, in local time.
         end_datetime = datetime.now().replace(tzinfo=tz.tzlocal()) + timedelta(seconds=1)
 
-        self.assertTrue((start_datetime <= job.creation_date() <= end_datetime),
-                        'job creation date {} is not '
-                        'between the start date time {} and end date time {}'
-                        .format(job.creation_date(), start_datetime, end_datetime))
+        self.assertTrue(
+            start_datetime <= job.creation_date() <= end_datetime,
+            f'job creation date {job.creation_date()} is not between the start date time {start_datetime} and end date time {end_datetime}',
+        )
 
     @skip('outdated')
     def test_time_per_step(self):
@@ -236,10 +236,10 @@ class TestIBMQJobAttributes(IBMQTestCase):
 
         self.assertTrue(job.time_per_step())
         for step, time_data in job.time_per_step().items():
-            self.assertTrue((start_datetime <= time_data <= end_datetime),
-                            'job time step "{}={}" is not '
-                            'between the start date time {} and end date time {}'
-                            .format(step, time_data, start_datetime, end_datetime))
+            self.assertTrue(
+                start_datetime <= time_data <= end_datetime,
+                f'job time step "{step}={time_data}" is not between the start date time {start_datetime} and end date time {end_datetime}',
+            )
 
         rjob = self.provider.backend.jobs(
             db_filter={'id': job.job_id()}, start_datetime=self.last_week)[0]
@@ -270,20 +270,28 @@ class TestIBMQJobAttributes(IBMQTestCase):
             queue_info = job.queue_info()
             # Even if job status is queued, its queue info may not be immediately available.
             if (job._status is JobStatus.QUEUED and job.queue_position() is not None) or \
-                    job._status in leave_states:
+                        job._status in leave_states:
                 break
             time.sleep(1)
 
         if job._status is JobStatus.QUEUED and job.queue_position() is not None:
             self.log.debug("Job id=%s, queue info=%s, queue position=%s",
                            job.job_id(), queue_info, job.queue_position())
-            msg = "Job {} is queued but has no ".format(job.job_id())
-            self.assertIsNotNone(queue_info, msg + "queue info.")
+            msg = f"Job {job.job_id()} is queued but has no "
+            self.assertIsNotNone(queue_info, f"{msg}queue info.")
             for attr, value in queue_info.__dict__.items():
                 self.assertIsNotNone(value, msg + attr)
-            self.assertTrue(all(0 < priority <= 1.0 for priority in [
-                queue_info.hub_priority, queue_info.group_priority, queue_info.project_priority]),
-                            "Unexpected queue info {} for job {}".format(queue_info, job.job_id()))
+            self.assertTrue(
+                all(
+                    0 < priority <= 1.0
+                    for priority in [
+                        queue_info.hub_priority,
+                        queue_info.group_priority,
+                        queue_info.project_priority,
+                    ]
+                ),
+                f"Unexpected queue info {queue_info} for job {job.job_id()}",
+            )
 
             self.assertTrue(queue_info.format())
             self.assertTrue(repr(queue_info))
@@ -362,16 +370,14 @@ class TestIBMQJobAttributes(IBMQTestCase):
 
         rjobs = self.sim_backend.jobs(
             job_tags=['phantom_tag'], start_datetime=self.last_week)
-        self.assertEqual(len(rjobs), 0,
-                         "Expected job {}, got {}".format(job.job_id(), rjobs))
+        self.assertEqual(len(rjobs), 0, f"Expected job {job.job_id()}, got {rjobs}")
 
         # Check all tags, some of the tags, and a mixture of good and bad tags.
-        tags_to_check = [job_tags, job_tags[1:2], job_tags[0:1]+['phantom_tag']]
+        tags_to_check = [job_tags, job_tags[1:2], job_tags[:1] + ['phantom_tag']]
         for tags in tags_to_check:
             with self.subTest(tags=tags):
                 rjobs = self.sim_backend.jobs(job_tags=tags, start_datetime=self.last_week)
-                self.assertEqual(len(rjobs), 1,
-                                 "Expected job {}, got {}".format(job.job_id(), rjobs))
+                self.assertEqual(len(rjobs), 1, f"Expected job {job.job_id()}, got {rjobs}")
                 self.assertEqual(rjobs[0].job_id(), job.job_id())
                 self.assertEqual(set(rjobs[0].tags()), set(job_tags))
 
@@ -382,20 +388,18 @@ class TestIBMQJobAttributes(IBMQTestCase):
         job_tags = [uuid.uuid4().hex, uuid.uuid4().hex, uuid.uuid4().hex]
         job = self.sim_backend.run(self.bell, job_tags=job_tags)
 
-        no_rjobs_tags = [job_tags[0:1]+['phantom_tags'], ['phantom_tag']]
+        no_rjobs_tags = [job_tags[:1] + ['phantom_tags'], ['phantom_tag']]
         for tags in no_rjobs_tags:
             rjobs = self.sim_backend.jobs(
                 job_tags=tags, job_tags_operator="AND", start_datetime=self.last_week)
-            self.assertEqual(len(rjobs), 0,
-                             "Expected job {}, got {}".format(job.job_id(), rjobs))
+            self.assertEqual(len(rjobs), 0, f"Expected job {job.job_id()}, got {rjobs}")
 
         has_rjobs_tags = [job_tags, job_tags[1:3]]
         for tags in has_rjobs_tags:
             with self.subTest(tags=tags):
                 rjobs = self.sim_backend.jobs(
                     job_tags=tags, job_tags_operator="AND", start_datetime=self.last_week)
-                self.assertEqual(len(rjobs), 1,
-                                 "Expected job {}, got {}".format(job.job_id(), rjobs))
+                self.assertEqual(len(rjobs), 1, f"Expected job {job.job_id()}, got {rjobs}")
                 self.assertEqual(rjobs[0].job_id(), job.job_id())
                 self.assertEqual(set(rjobs[0].tags()), set(job_tags))
 
@@ -405,8 +409,8 @@ class TestIBMQJobAttributes(IBMQTestCase):
         job = self.sim_backend.run(self.bell, job_tags=initial_job_tags)
 
         tags_to_replace_subtests = [
-            [],  # empty tags.
-            ['{}_new_tag_{}'.format(uuid.uuid4().hex, i) for i in range(2)]  # unique tags.
+            [],
+            [f'{uuid.uuid4().hex}_new_tag_{i}' for i in range(2)],
         ]
         for tags_to_replace in tags_to_replace_subtests:
             with self.subTest(tags_to_replace=tags_to_replace):
@@ -420,8 +424,8 @@ class TestIBMQJobAttributes(IBMQTestCase):
         job = self.sim_backend.run(self.bell, job_tags=initial_job_tags)
 
         tags_to_add_subtests = [
-            [],  # empty tags.
-            ['{}_new_tag_{}'.format(uuid.uuid4().hex, i) for i in range(2)]  # unique tags.
+            [],
+            [f'{uuid.uuid4().hex}_new_tag_{i}' for i in range(2)],
         ]
         for tags_to_add in tags_to_add_subtests:
             tags_after_add = job.tags() + tags_to_add
@@ -495,14 +499,18 @@ class TestIBMQJobAttributes(IBMQTestCase):
     def test_run_mode(self):
         """Test job run mode."""
         self.sim_job.wait_for_final_state()
-        self.assertEqual(self.sim_job.scheduling_mode(), "fairshare",
-                         "Job {} scheduling mode is {}".format(
-                             self.sim_job.job_id(), self.sim_job.scheduling_mode()))
+        self.assertEqual(
+            self.sim_job.scheduling_mode(),
+            "fairshare",
+            f"Job {self.sim_job.job_id()} scheduling mode is {self.sim_job.scheduling_mode()}",
+        )
 
         rjob = self.sim_backend.retrieve_job(self.sim_job.job_id())
-        self.assertEqual(rjob.scheduling_mode(), "fairshare",
-                         "Job {} scheduling mode is {}".format(
-                             rjob.job_id(), rjob.scheduling_mode()))
+        self.assertEqual(
+            rjob.scheduling_mode(),
+            "fairshare",
+            f"Job {rjob.job_id()} scheduling mode is {rjob.scheduling_mode()}",
+        )
 
     def test_missing_required_fields(self):
         """Test response data is missing required fields."""

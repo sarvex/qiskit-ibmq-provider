@@ -61,30 +61,28 @@ def update_credentials(force: bool = False) -> Optional[Credentials]:
             new_credentials.append(Credentials(credentials.token, QE2_AUTH_URL,
                                                proxies=credentials.proxies,
                                                verify=credentials.verify))
-        else:
-            if credentials.url == QE2_AUTH_URL:
+        elif credentials.url == QE2_AUTH_URL:
                 # Credential is already for auth url.
-                warnings.append('The stored account with url "{}" is already '
-                                'an IBM Q Experience v2 account.'.format(credentials.url))
-            elif credentials.is_ibmq():
-                new_credentials.append(Credentials(credentials.token,
-                                                   QE2_AUTH_URL,
-                                                   proxies=credentials.proxies,
-                                                   verify=credentials.verify))
-                hub_lines.append(
-                    "  provider{} = IBMQ.get_provider(hub='{}', group='{}', "
-                    "project='{}')".format(provider_number,
-                                           credentials.hub,
-                                           credentials.group,
-                                           credentials.project))
-                provider_number += 1
-            else:
+            warnings.append(
+                f'The stored account with url "{credentials.url}" is already an IBM Q Experience v2 account.'
+            )
+        elif credentials.is_ibmq():
+            new_credentials.append(Credentials(credentials.token,
+                                               QE2_AUTH_URL,
+                                               proxies=credentials.proxies,
+                                               verify=credentials.verify))
+            hub_lines.append(
+                f"  provider{provider_number} = IBMQ.get_provider(hub='{credentials.hub}', group='{credentials.group}', project='{credentials.project}')"
+            )
+            provider_number += 1
+        else:
                 # Unknown URL - do not act on it.
-                warnings.append('The stored account with url "{}" could not be '
-                                'parsed.'.format(credentials.url))
+            warnings.append(
+                f'The stored account with url "{credentials.url}" could not be parsed.'
+            )
 
     # Check that the conversion can be performed.
-    print('Found {} credentials.'.format(len(credentials_list)))
+    print(f'Found {len(credentials_list)} credentials.')
 
     if not new_credentials:
         print('No credentials available for updating could be found. No '
@@ -100,15 +98,15 @@ def update_credentials(force: bool = False) -> Optional[Credentials]:
     tuples = [(credentials.token, credentials.proxies, credentials.verify)
               for credentials in new_credentials]
 
-    if not all(field_tuple == tuples[0] for field_tuple in tuples):
+    if any(field_tuple != tuples[0] for field_tuple in tuples):
         warnings.append('Multiple credentials found with different settings. The '
                         'conversion will use the settings from the first '
                         'IBM Q Experience v1 account found.')
 
     # Print a summary of the changes.
-    print('The credentials stored will be replaced with a single entry with '
-          'token "{}" and the new IBM Q Experience v2 URL ({}).'.format(
-              final_credentials.token, QE2_AUTH_URL))
+    print(
+        f'The credentials stored will be replaced with a single entry with token "{final_credentials.token}" and the new IBM Q Experience v2 URL ({QE2_AUTH_URL}).'
+    )
     if final_credentials.proxies:
         print('The existing proxy configuration will be preserved.')
 

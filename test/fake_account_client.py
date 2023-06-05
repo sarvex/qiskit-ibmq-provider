@@ -194,10 +194,7 @@ class BaseFakeAccountClient:
 
     def list_jobs_statuses(self, limit, skip, descending=True, extra_filter=None):
         """Return a list of statuses of jobs."""
-        # pylint: disable=unused-argument
-        job_data = []
-        for job in list(self._jobs.values())[skip:skip+limit]:
-            job_data.append(job.data())
+        job_data = [job.data() for job in list(self._jobs.values())[skip:skip+limit]]
         if not descending:
             job_data.reverse()
         return job_data
@@ -230,7 +227,7 @@ class BaseFakeAccountClient:
     def job_result(self, job_id, *_args, **_kwargs):
         """Return a random job result."""
         if job_id in self._results_retrieved:
-            raise ValueError('Result already retrieved for job {}!'.format(job_id))
+            raise ValueError(f'Result already retrieved for job {job_id}!')
         self._results_retrieved.add(job_id)
         return self._get_job(job_id).result()
 

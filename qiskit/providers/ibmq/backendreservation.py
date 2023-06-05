@@ -72,16 +72,14 @@ class BackendReservation:
             self.hub = self.group = self.project = None
 
     def __repr__(self) -> str:
-        out_str = "<{}(backend_name={}, start_datetime={}, end_datetime={}".format(
-            self.__class__.__name__, self.backend_name, self.start_datetime.isoformat(),
-            self.end_datetime.isoformat())
+        out_str = f"<{self.__class__.__name__}(backend_name={self.backend_name}, start_datetime={self.start_datetime.isoformat()}, end_datetime={self.end_datetime.isoformat()}"
         for attr in ['mode', 'duration', 'reservation_id', 'creation_datetime',
                      'hub', 'group', 'project']:
             val = getattr(self, attr)
             if isinstance(val, datetime):
                 val = val.isoformat()
             if val is not None:
-                out_str += ", {}={}".format(attr, val)
+                out_str += f", {attr}={val}"
         out_str += ')>'
         return out_str
 

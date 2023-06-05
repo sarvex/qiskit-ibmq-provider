@@ -82,32 +82,32 @@ class QueueInfo:
                 value is not valid.
         """
         status = api_status_to_job_status(self._status).name \
-            if self._status else self._get_value(self._status)
+                if self._status else self._get_value(self._status)
         with warnings.catch_warnings():
             warnings.simplefilter("ignore")
             est_start_time = self.estimated_start_time.isoformat() \
-                if self.estimated_start_time else None
+                    if self.estimated_start_time else None
             est_complete_time = self.estimated_complete_time.isoformat() \
-                if self.estimated_complete_time else None
+                    if self.estimated_complete_time else None
 
         queue_info = [
-            "job_id='{}'".format(self.job_id),
-            "_status='{}'".format(status),
-            "estimated_start_time='{}'".format(est_start_time),
-            "estimated_complete_time='{}'".format(est_complete_time),
-            "position={}".format(self.position),
-            "hub_priority={}".format(self.hub_priority),
-            "group_priority={}".format(self.group_priority),
-            "project_priority={}".format(self.project_priority)
+            f"job_id='{self.job_id}'",
+            f"_status='{status}'",
+            f"estimated_start_time='{est_start_time}'",
+            f"estimated_complete_time='{est_complete_time}'",
+            f"position={self.position}",
+            f"hub_priority={self.hub_priority}",
+            f"group_priority={self.group_priority}",
+            f"project_priority={self.project_priority}",
         ]
 
-        return "<{}({})>".format(self.__class__.__name__, ', '.join(queue_info))
+        return f"<{self.__class__.__name__}({', '.join(queue_info)})>"
 
     def __getattr__(self, name: str) -> Any:
         try:
             return self._data[name]
         except KeyError:
-            raise AttributeError('Attribute {} is not defined.'.format(name)) from None
+            raise AttributeError(f'Attribute {name} is not defined.') from None
 
     def format(self) -> str:
         """Build a user-friendly report for the job queue information.
@@ -116,24 +116,24 @@ class QueueInfo:
              The job queue information report.
         """
         status = api_status_to_job_status(self._status).value \
-            if self._status else self._get_value(self._status)
+                if self._status else self._get_value(self._status)
 
         with warnings.catch_warnings():
             warnings.simplefilter("ignore")
             est_start_time = duration_difference(self.estimated_start_time) \
-                if self.estimated_start_time else self._get_value(self.estimated_start_time)
+                    if self.estimated_start_time else self._get_value(self.estimated_start_time)
             est_complete_time = duration_difference(self.estimated_complete_time) \
-                if self.estimated_complete_time else self._get_value(self.estimated_complete_time)
+                    if self.estimated_complete_time else self._get_value(self.estimated_complete_time)
 
         queue_info = [
-            "Job {} queue information:".format(self._get_value(self.job_id)),
-            "    queue position: {}".format(self._get_value(self.position)),
-            "    status: {}".format(status),
-            "    estimated start time: {}".format(est_start_time),
-            "    estimated completion time: {}".format(est_complete_time),
-            "    hub priority: {}".format(self._get_value(self.hub_priority)),
-            "    group priority: {}".format(self._get_value(self.group_priority)),
-            "    project priority: {}".format(self._get_value(self.project_priority))
+            f"Job {self._get_value(self.job_id)} queue information:",
+            f"    queue position: {self._get_value(self.position)}",
+            f"    status: {status}",
+            f"    estimated start time: {est_start_time}",
+            f"    estimated completion time: {est_complete_time}",
+            f"    hub priority: {self._get_value(self.hub_priority)}",
+            f"    group priority: {self._get_value(self.group_priority)}",
+            f"    project priority: {self._get_value(self.project_priority)}",
         ]
 
         return '\n'.join(queue_info)

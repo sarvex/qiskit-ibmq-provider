@@ -395,14 +395,13 @@ class IBMQBackend(Backend):
                 live_data_enabled=live_data_enabled)
         except ApiError as ex:
             if 'Error code: 3458' in str(ex):
-                raise IBMQBackendJobLimitError('Error submitting job: {}'.format(str(ex))) from ex
-            raise IBMQBackendApiError('Error submitting job: {}'.format(str(ex))) from ex
+                raise IBMQBackendJobLimitError(f'Error submitting job: {str(ex)}') from ex
+            raise IBMQBackendApiError(f'Error submitting job: {str(ex)}') from ex
 
         # Error in the job after submission:
         # Transition to the `ERROR` final state.
         if 'error' in submit_info:
-            raise IBMQBackendError(
-                'Error submitting job: {}'.format(str(submit_info['error'])))
+            raise IBMQBackendError(f"Error submitting job: {str(submit_info['error'])}")
 
         # Submission success.
         try:
@@ -410,8 +409,9 @@ class IBMQBackend(Backend):
             logger.debug('Job %s was successfully submitted.', job.job_id())
         except TypeError as err:
             logger.debug("Invalid job data received: %s", submit_info)
-            raise IBMQBackendApiProtocolError('Unexpected return value received from the server '
-                                              'when submitting job: {}'.format(str(err))) from err
+            raise IBMQBackendApiProtocolError(
+                f'Unexpected return value received from the server when submitting job: {str(err)}'
+            ) from err
         Publisher().publish("ibmq.job.start", job)
         return job
 
@@ -446,8 +446,9 @@ class IBMQBackend(Backend):
         """
         # pylint: disable=arguments-differ
         if not isinstance(refresh, bool):
-            raise TypeError("The 'refresh' argument needs to be a boolean. "
-                            "{} is of type {}".format(refresh, type(refresh)))
+            raise TypeError(
+                f"The 'refresh' argument needs to be a boolean. {refresh} is of type {type(refresh)}"
+            )
         if datetime and not isinstance(datetime, python_datetime):
             raise TypeError("'{}' is not of type 'datetime'.")
 
@@ -486,8 +487,8 @@ class IBMQBackend(Backend):
             return BackendStatus.from_dict(api_status)
         except TypeError as ex:
             raise IBMQBackendApiProtocolError(
-                'Unexpected return value received from the server when '
-                'getting backend status: {}'.format(str(ex))) from ex
+                f'Unexpected return value received from the server when getting backend status: {str(ex)}'
+            ) from ex
 
     def defaults(self, refresh: bool = False) -> Optional[PulseDefaults]:
         """Return the pulse defaults for the backend.
@@ -504,8 +505,9 @@ class IBMQBackend(Backend):
             The backend pulse defaults or ``None`` if the backend does not support pulse.
         """
         if refresh or self._defaults is None:
-            api_defaults = self._api_client.backend_pulse_defaults(self.name())
-            if api_defaults:
+            if api_defaults := self._api_client.backend_pulse_defaults(
+                self.name()
+            ):
                 decode_pulse_defaults(api_defaults)
                 self._defaults = PulseDefaults.from_dict(api_defaults)
             else:
@@ -554,8 +556,8 @@ class IBMQBackend(Backend):
             return job_limit
         except TypeError as ex:
             raise IBMQBackendApiProtocolError(
-                'Unexpected return value received from the server when '
-                'querying job limit data for the backend: {}.'.format(ex)) from ex
+                f'Unexpected return value received from the server when querying job limit data for the backend: {ex}.'
+            ) from ex
 
     def remaining_jobs_count(self) -> Optional[int]:
         """Return the number of remaining jobs that could be submitted to the backend.
@@ -696,13 +698,12 @@ class IBMQBackend(Backend):
         job_backend = job.backend()
 
         if self.name() != job_backend.name():
-            warnings.warn('Job {} belongs to another backend than the one queried. '
-                          'The query was made on backend {}, '
-                          'but the job actually belongs to backend {}.'
-                          .format(job_id, self.name(), job_backend.name()))
-            raise IBMQBackendError('Failed to get job {}: '
-                                   'job does not belong to backend {}.'
-                                   .format(job_id, self.name()))
+            warnings.warn(
+                f'Job {job_id} belongs to another backend than the one queried. The query was made on backend {self.name()}, but the job actually belongs to backend {job_backend.name()}.'
+            )
+            raise IBMQBackendError(
+                f'Failed to get job {job_id}: job does not belong to backend {self.name()}.'
+            )
 
         return job
 
@@ -750,10 +751,10 @@ class IBMQBackend(Backend):
     def __repr__(self) -> str:
         credentials_info = ''
         if self.hub:
-            credentials_info = "hub='{}', group='{}', project='{}'".format(
-                self.hub, self.group, self.project)
-        return "<{}('{}') from IBMQ({})>".format(
-            self.__class__.__name__, self.name(), credentials_info)
+            credentials_info = (
+                f"hub='{self.hub}', group='{self.group}', project='{self.project}'"
+            )
+        return f"<{self.__class__.__name__}('{self.name()}') from IBMQ({credentials_info})>"
 
     def _deprecate_id_instruction(
             self,
@@ -800,7 +801,7 @@ class IBMQBackend(Backend):
             return
 
         if not self.id_warning_issued:
-            if id_support and delay_support:
+            if id_support:
                 warnings.warn("Support for the 'id' instruction has been deprecated "
                               "from IBM hardware backends. Any 'id' instructions "
                               "will be replaced with their equivalent 'delay' instruction. "
@@ -997,7 +998,7 @@ class IBMQRetiredBackend(IBMQBackend):
     ) -> None:
         """Run a Qobj."""
         # pylint: disable=arguments-differ
-        raise IBMQBackendError('This backend ({}) is no longer available.'.format(self.name()))
+        raise IBMQBackendError(f'This backend ({self.name()}) is no longer available.')
 
     @classmethod
     def from_name(

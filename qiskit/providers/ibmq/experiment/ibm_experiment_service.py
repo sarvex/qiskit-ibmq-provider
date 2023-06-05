@@ -166,14 +166,16 @@ class IBMExperimentService:
             'group_id': self._provider.credentials.group,
             'project_id': self._provider.credentials.project
         }
-        data.update(self._experiment_data_to_api(metadata=metadata,
-                                                 experiment_id=experiment_id,
-                                                 parent_id=parent_id,
-                                                 job_ids=job_ids,
-                                                 tags=tags,
-                                                 notes=notes,
-                                                 share_level=share_level,
-                                                 start_dt=start_datetime))
+        data |= self._experiment_data_to_api(
+            metadata=metadata,
+            experiment_id=experiment_id,
+            parent_id=parent_id,
+            job_ids=job_ids,
+            tags=tags,
+            notes=notes,
+            share_level=share_level,
+            start_dt=start_datetime,
+        )
 
         with map_api_error(f"Experiment {experiment_id} already exists."):
             response_data = self._api_client.experiment_upload(json.dumps(data, cls=json_encoder))
@@ -434,10 +436,10 @@ class IBMExperimentService:
 
         start_time_filters = []
         if start_datetime_after:
-            st_filter = 'ge:{}'.format(local_to_utc_str(start_datetime_after))
+            st_filter = f'ge:{local_to_utc_str(start_datetime_after)}'
             start_time_filters.append(st_filter)
         if start_datetime_before:
-            st_filter = 'le:{}'.format(local_to_utc_str(start_datetime_before))
+            st_filter = f'le:{local_to_utc_str(start_datetime_before)}'
             start_time_filters.append(st_filter)
 
         if exclude_public and public_only:
@@ -461,7 +463,7 @@ class IBMExperimentService:
         experiments = []
         marker = None
         while limit is None or limit > 0:
-            with map_api_error(f"Request failed."):
+            with map_api_error("Request failed."):
                 response = self._api_client.experiments(
                     limit=limit,
                     marker=marker,
@@ -479,8 +481,10 @@ class IBMExperimentService:
                     sort_by=converted["sort_by"])
             raw_data = json.loads(response, cls=json_decoder)
             marker = raw_data.get('marker')
-            for exp in raw_data['experiments']:
-                experiments.append(self._api_to_experiment_data(exp))
+            experiments.extend(
+                self._api_to_experiment_data(exp)
+                for exp in raw_data['experiments']
+            )
             if limit:
                 limit -= len(raw_data['experiments'])
             if not marker:  # No more experiments to return.
@@ -513,7 +517,7 @@ class IBMExperimentService:
         self._convert_dt(raw_data.get('end_time', None), extra_data, 'end_datetime')
         self._convert_dt(raw_data.get('updated_at', None), extra_data, 'updated_datetime')
 
-        out_dict = {
+        return {
             "experiment_type": raw_data['type'],
             "backend": backend,
             "experiment_id": raw_data['uuid'],
@@ -528,9 +532,8 @@ class IBMExperimentService:
             "group": raw_data.get("group_id", ""),
             "project": raw_data.get("project_id", ""),
             "owner": raw_data.get("owner", ""),
-            **extra_data
+            **extra_data,
         }
-        return out_dict
 
     def _convert_dt(
             self,
@@ -623,9 +626,7 @@ class IBMExperimentService:
         if device_components:
             if not isinstance(device_components, list):
                 device_components = [device_components]
-            for comp in device_components:
-                components.append(str(comp))
-
+            components.extend(str(comp) for comp in device_components)
         if isinstance(quality, str):
             quality = ResultQuality(quality.upper())
 
@@ -885,8 +886,10 @@ class IBMExperimentService:
                 )
             raw_data = json.loads(response, cls=json_decoder)
             marker = raw_data.get('marker')
-            for result in raw_data['analysis_results']:
-                results.append(self._api_to_analysis_result(result))
+            results.extend(
+                self._api_to_analysis_result(result)
+                for result in raw_data['analysis_results']
+            )
             if limit:
                 limit -= len(raw_data['analysis_results'])
             if not marker:  # No more experiments to return.
@@ -954,13 +957,14 @@ class IBMExperimentService:
             elif tags_operator.upper() == 'AND':
                 tags_filter = 'contains:' + ','.join(tags)
             else:
-                raise ValueError('{} is not a valid `tags_operator`. Valid values are '
-                                 '"AND" and "OR".'.format(tags_operator))
+                raise ValueError(
+                    f'{tags_operator} is not a valid `tags_operator`. Valid values are "AND" and "OR".'
+                )
 
-        sort_list = []
         if sort_by:
             if not isinstance(sort_by, list):
                 sort_by = [sort_by]
+            sort_list = []
             for sorter in sort_by:
                 key, direction = sorter.split(":")
                 key = key.lower()
@@ -982,13 +986,13 @@ class IBMExperimentService:
                                      f'device_components_operator value. Valid values '
                                      f'are ``None`` and "contains"')
                 device_components = \
-                    "contains:" + ','.join(device_components)  # type: ignore
+                        "contains:" + ','.join(device_components)  # type: ignore
 
         if item_type and item_type_operator:
             if item_type_operator != "like":
                 raise ValueError(f'"{item_type_operator}" is not a valid type operator value. '
                                  f'Valid values are ``None`` and "like".')
-            item_type = "like:" + item_type
+            item_type = f"like:{item_type}"
 
         return {"tags": tags_filter,
                 "sort_by": sort_by,
@@ -1009,12 +1013,10 @@ class IBMExperimentService:
         """
         extra_data = {}
 
-        chisq = raw_data.get('chisq', None)
-        if chisq:
+        if chisq := raw_data.get('chisq', None):
             extra_data['chisq'] = chisq
 
-        backend_name = raw_data['device_name']
-        if backend_name:
+        if backend_name := raw_data['device_name']:
             extra_data['backend_name'] = backend_name
 
         quality = raw_data.get('quality', None)
@@ -1024,7 +1026,7 @@ class IBMExperimentService:
         self._convert_dt(raw_data.get('created_at', None), extra_data, 'creation_datetime')
         self._convert_dt(raw_data.get('updated_at', None), extra_data, 'updated_datetime')
 
-        out_dict = {
+        return {
             "result_data": raw_data.get('fit', {}),
             "result_type": raw_data.get('type', None),
             "device_components": raw_data.get('device_components', []),
@@ -1034,9 +1036,8 @@ class IBMExperimentService:
             "verified": raw_data.get('verified', False),
             "tags": raw_data.get('tags', []),
             "service": self,
-            **extra_data
+            **extra_data,
         }
-        return out_dict
 
     def delete_analysis_result(
             self,
@@ -1096,7 +1097,7 @@ class IBMExperimentService:
             if isinstance(figure, str):
                 figure_name = figure
             else:
-                figure_name = "figure_{}.svg".format(datetime.now().isoformat())
+                figure_name = f"figure_{datetime.now().isoformat()}.svg"
         if not figure_name.endswith(".svg"):
             figure_name += ".svg"
 
@@ -1219,10 +1220,7 @@ class IBMExperimentService:
         for data in raw_data:
             components[data['device_name']].append(data['type'])
 
-        if backend_name:
-            return components[backend_name]
-
-        return dict(components)
+        return components[backend_name] if backend_name else dict(components)
 
     @property
     def preferences(self) -> Dict:

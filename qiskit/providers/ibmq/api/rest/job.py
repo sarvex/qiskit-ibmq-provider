@@ -54,7 +54,7 @@ class Job(RestAdapterBase):
             url_prefix: Prefix to use in the URL.
         """
         self.job_id = job_id
-        super().__init__(session, '{}/Jobs/{}'.format(url_prefix, job_id))
+        super().__init__(session, f'{url_prefix}/Jobs/{job_id}')
 
     def get(self) -> Dict[str, Any]:
         """Return job information.
@@ -99,8 +99,7 @@ class Job(RestAdapterBase):
         """
         url = self.get_url('callback_upload')
         data = self.session.post(url).json()
-        mapped_response = {'job': map_job_response(data['job'])}
-        return mapped_response
+        return {'job': map_job_response(data['job'])}
 
     def callback_download(self) -> Dict[str, Any]:
         """Notify the API after downloading a ``Qobj`` via object storage.
@@ -201,8 +200,7 @@ class Job(RestAdapterBase):
             JSON response.
         """
         logger.debug('Downloading from object storage.')
-        response = self.session.get(url, bare=True, timeout=600).json()
-        return response
+        return self.session.get(url, bare=True, timeout=600).json()
 
     def delete(self) -> None:
         """Mark job for deletion."""

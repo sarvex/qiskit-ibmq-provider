@@ -38,8 +38,7 @@ def setup_test_logging(logger: logging.Logger, filename: str):
         filename: Name of the output file, if log to file is enabled.
     """
     # Set up formatter.
-    log_fmt = ('{}.%(funcName)s:%(levelname)s:%(asctime)s:'
-               ' %(message)s'.format(logger.name))
+    log_fmt = f'{logger.name}.%(funcName)s:%(levelname)s:%(asctime)s: %(message)s'
     formatter = logging.Formatter(log_fmt)
 
     if os.getenv('STREAM_LOG', 'true'):
@@ -70,8 +69,10 @@ def most_busy_backend(provider: AccountProvider) -> IBMQBackend:
         The most busy backend.
     """
     backends = provider.backends(simulator=False, operational=True)
-    return max([b for b in backends if b.configuration().n_qubits >= 5],
-               key=lambda b: b.status().pending_jobs)
+    return max(
+        (b for b in backends if b.configuration().n_qubits >= 5),
+        key=lambda b: b.status().pending_jobs,
+    )
 
 
 def get_large_circuit(backend: IBMQBackend) -> QuantumCircuit:
@@ -125,9 +126,9 @@ def cancel_job(job: IBMQJob, verify: bool = False) -> bool:
             if cancelled:
                 if verify:
                     status = job.status()
-                    assert status is JobStatus.CANCELLED, \
-                        'cancel() was successful for job {} but its ' \
-                        'status is {}.'.format(job.job_id(), status)
+                    assert (
+                        status is JobStatus.CANCELLED
+                    ), f'cancel() was successful for job {job.job_id()} but its status is {status}.'
                 break
         except JobError:
             pass
@@ -147,8 +148,7 @@ def submit_job_bad_shots(backend: IBMQBackend) -> IBMQJob:
     qobj = bell_in_qobj(backend=backend)
     # Modify the number of shots to be an invalid amount.
     qobj.config.shots = backend.configuration().max_shots + 10000
-    job_to_fail = backend.run(qobj)
-    return job_to_fail
+    return backend.run(qobj)
 
 
 def submit_job_one_bad_instr(backend: IBMQBackend) -> IBMQJob:
@@ -167,8 +167,7 @@ def submit_job_one_bad_instr(backend: IBMQBackend) -> IBMQJob:
     else:
         qobj = assemble([qc_new]*2, backend=backend)
     qobj.experiments[1].instructions[1].name = 'bad_instruction'
-    job = backend.run(qobj)
-    return job
+    return backend.run(qobj)
 
 
 def submit_and_cancel(backend: IBMQBackend) -> IBMQJob:
@@ -197,8 +196,7 @@ def get_pulse_schedule(backend: IBMQBackend) -> Schedule:
     measure = inst_map.get('measure', range(config.n_qubits)) << x.duration
     ground_sched = measure
     excited_sched = x | measure
-    schedules = [ground_sched, excited_sched]
-    return schedules
+    return [ground_sched, excited_sched]
 
 
 def get_provider(
@@ -261,7 +259,6 @@ def update_job_tags_and_verify(
     time.sleep(2)
     job_to_update.refresh()
 
-    assert set(job_to_update.tags()) == set(tags_after_update), (
-        'Updating the tags for job {} was unsuccessful. '
-        'The tags are {}, but they should be {}.'
-        .format(job_to_update.job_id(), job_to_update.tags(), tags_after_update))
+    assert set(job_to_update.tags()) == set(
+        tags_after_update
+    ), f'Updating the tags for job {job_to_update.job_id()} was unsuccessful. The tags are {job_to_update.tags()}, but they should be {tags_after_update}.'

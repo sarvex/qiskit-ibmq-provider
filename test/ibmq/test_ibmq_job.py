@@ -91,12 +91,11 @@ class TestIBMQJob(IBMQTestCase):
         timeout = 30
         start_time = time.time()
         while True:
-            check = sum(
-                [job.status() is JobStatus.RUNNING for job in job_array])
+            check = sum(job.status() is JobStatus.RUNNING for job in job_array)
             if check >= 2:
                 self.log.info('found %d simultaneous jobs', check)
                 break
-            if all([job.status() is JobStatus.DONE for job in job_array]):
+            if all(job.status() is JobStatus.DONE for job in job_array):
                 # done too soon? don't generate error
                 self.log.warning('all jobs completed before simultaneous jobs '
                                  'could be detected')
@@ -113,9 +112,8 @@ class TestIBMQJob(IBMQTestCase):
         result_array = [job.result() for job in job_array]
         self.log.info('got back all job results')
         # Ensure all jobs have finished.
-        self.assertTrue(
-            all([job.status() is JobStatus.DONE for job in job_array]))
-        self.assertTrue(all([result.success for result in result_array]))
+        self.assertTrue(all(job.status() is JobStatus.DONE for job in job_array))
+        self.assertTrue(all(result.success for result in result_array))
 
         # Ensure job ids are unique.
         job_ids = [job.job_id() for job in job_array]
@@ -137,13 +135,11 @@ class TestIBMQJob(IBMQTestCase):
                      for _ in range(num_jobs)]
         time.sleep(3)  # give time for jobs to start (better way?)
         job_status = [job.status() for job in job_array]
-        num_init = sum(
-            [status is JobStatus.INITIALIZING for status in job_status])
-        num_queued = sum([status is JobStatus.QUEUED for status in job_status])
-        num_running = sum(
-            [status is JobStatus.RUNNING for status in job_status])
-        num_done = sum([status is JobStatus.DONE for status in job_status])
-        num_error = sum([status is JobStatus.ERROR for status in job_status])
+        num_init = sum(status is JobStatus.INITIALIZING for status in job_status)
+        num_queued = sum(status is JobStatus.QUEUED for status in job_status)
+        num_running = sum(status is JobStatus.RUNNING for status in job_status)
+        num_done = sum(status is JobStatus.DONE for status in job_status)
+        num_error = sum(status is JobStatus.ERROR for status in job_status)
         self.log.info('number of currently initializing jobs: %d/%d',
                       num_init, num_jobs)
         self.log.info('number of currently queued jobs: %d/%d',
@@ -162,9 +158,8 @@ class TestIBMQJob(IBMQTestCase):
         result_array = [job.result() for job in job_array]
 
         # Ensure all jobs have finished.
-        self.assertTrue(
-            all([job.status() is JobStatus.DONE for job in job_array]))
-        self.assertTrue(all([result.success for result in result_array]))
+        self.assertTrue(all(job.status() is JobStatus.DONE for job in job_array))
+        self.assertTrue(all(result.success for result in result_array))
 
         # Ensure job ids are unique.
         job_ids = [job.job_id() for job in job_array]
@@ -195,13 +190,16 @@ class TestIBMQJob(IBMQTestCase):
     def test_retrieve_job_uses_appropriate_backend(self, backend):
         """Test that retrieved jobs come from their appropriate backend."""
         backend_1 = backend
-        # Get a second backend.
-        backend_2 = None
         provider = backend.provider()
-        for my_backend in provider.backends():
-            if my_backend.status().operational and my_backend.name() != backend_1.name():
-                backend_2 = my_backend
-                break
+        backend_2 = next(
+            (
+                my_backend
+                for my_backend in provider.backends()
+                if my_backend.status().operational
+                and my_backend.name() != backend_1.name()
+            ),
+            None,
+        )
         if not backend_2:
             raise SkipTest('Skipping test that requires multiple backends')
 
@@ -244,9 +242,10 @@ class TestIBMQJob(IBMQTestCase):
                 self.assertTrue(backend_jobs)
 
                 for job in backend_jobs:
-                    self.assertTrue(job.status() is JobStatus.DONE,
-                                    "Job {} has status {} when it should be DONE"
-                                    .format(job.job_id(), job.status()))
+                    self.assertTrue(
+                        job.status() is JobStatus.DONE,
+                        f"Job {job.job_id()} has status {job.status()} when it should be DONE",
+                    )
 
     @skip('outdated')
     def test_retrieve_multiple_job_statuses(self):
@@ -277,10 +276,11 @@ class TestIBMQJob(IBMQTestCase):
                 self.assertIn(job_to_fail.job_id(), job_list_ids)
 
                 for filtered_job in job_list:
-                    self.assertIn(filtered_job._status, statuses_to_filter,
-                                  "job {} has status {} but should be one of {}"
-                                  .format(filtered_job.job_id(), filtered_job._status,
-                                          statuses_to_filter))
+                    self.assertIn(
+                        filtered_job._status,
+                        statuses_to_filter,
+                        f"job {filtered_job.job_id()} has status {filtered_job._status} but should be one of {statuses_to_filter}",
+                    )
 
     @skip('outdated')
     def test_retrieve_active_jobs(self):
@@ -296,9 +296,10 @@ class TestIBMQJob(IBMQTestCase):
             self.assertIn(job.job_id(), [active_job.job_id() for active_job in active_jobs])
 
         for active_job in active_jobs:
-            self.assertTrue(active_job._status in active_job_statuses,
-                            "status for job {} is '{}' but it should be '{}'."
-                            .format(active_job.job_id(), active_job._status, active_job_statuses))
+            self.assertTrue(
+                active_job._status in active_job_statuses,
+                f"status for job {active_job.job_id()} is '{active_job._status}' but it should be '{active_job_statuses}'.",
+            )
 
         # Cancel job so it doesn't consume more resources.
         cancel_job(job)
@@ -318,14 +319,17 @@ class TestIBMQJob(IBMQTestCase):
         job_list_queued = backend.jobs(status=JobStatus.QUEUED, limit=5,
                                        start_datetime=self.last_month)
         if before_status is JobStatus.QUEUED and job.status() is JobStatus.QUEUED:
-            self.assertIn(job.job_id(), [queued_job.job_id() for queued_job in job_list_queued],
-                          "job {} is queued but not retrieved when filtering for queued jobs."
-                          .format(job.job_id()))
+            self.assertIn(
+                job.job_id(),
+                [queued_job.job_id() for queued_job in job_list_queued],
+                f"job {job.job_id()} is queued but not retrieved when filtering for queued jobs.",
+            )
 
         for queued_job in job_list_queued:
-            self.assertTrue(queued_job._status == JobStatus.QUEUED,
-                            "status for job {} is '{}' but it should be {}"
-                            .format(queued_job.job_id(), queued_job._status, JobStatus.QUEUED))
+            self.assertTrue(
+                queued_job._status == JobStatus.QUEUED,
+                f"status for job {queued_job.job_id()} is '{queued_job._status}' but it should be {JobStatus.QUEUED}",
+            )
 
         # Cancel job so it doesn't consume more resources.
         cancel_job(job)
@@ -347,9 +351,10 @@ class TestIBMQJob(IBMQTestCase):
             self.assertIn(job.job_id(), [rjob.job_id() for rjob in job_list_running])
 
         for rjob in job_list_running:
-            self.assertTrue(rjob._status == JobStatus.RUNNING,
-                            "Status for job {} is '{}' but should be RUNNING"
-                            .format(rjob.job_id(), rjob._status))
+            self.assertTrue(
+                rjob._status == JobStatus.RUNNING,
+                f"Status for job {rjob.job_id()} is '{rjob._status}' but should be RUNNING",
+            )
 
     @skip('outdated')
     def test_retrieve_jobs_start_datetime(self):
@@ -362,9 +367,11 @@ class TestIBMQJob(IBMQTestCase):
                                               limit=2, start_datetime=past_month)
         self.assertTrue(job_list)
         for job in job_list:
-            self.assertGreaterEqual(job.creation_date(), past_month_tz_aware,
-                                    'job {} creation date {} not within range'
-                                    .format(job.job_id(), job.creation_date()))
+            self.assertGreaterEqual(
+                job.creation_date(),
+                past_month_tz_aware,
+                f'job {job.job_id()} creation date {job.creation_date()} not within range',
+            )
 
     def test_retrieve_jobs_end_datetime(self):
         """Test retrieving jobs created before a specified datetime."""
@@ -372,16 +379,14 @@ class TestIBMQJob(IBMQTestCase):
         # Add local tz in order to compare to `creation_date` which is tz aware.
         past_month_tz_aware = past_month.replace(tzinfo=tz.tzlocal())
 
-        job_list = self.provider.backend.jobs(backend_name=self.sim_backend.name(),
-                                              limit=2, end_datetime=past_month)
-        if job_list:
+        if job_list := self.provider.backend.jobs(
+            backend_name=self.sim_backend.name(), limit=2, end_datetime=past_month
+        ):
             for job in job_list:
                 self.assertLessEqual(
                     job.creation_date(),
                     past_month_tz_aware,
-                    "job {} creation date {} not within range".format(
-                        job.job_id(), job.creation_date()
-                    ),
+                    f"job {job.job_id()} creation date {job.creation_date()} not within range",
                 )
 
     # def test_retrieve_jobs_between_datetimes(self):
@@ -432,8 +437,9 @@ class TestIBMQJob(IBMQTestCase):
         for job in job_list:
             job.refresh()
             self.assertEqual(
-                job.summary_data_['summary']['qobj_config']['n_qubits'], 3,
-                "Job {} does not have correct data.".format(job.job_id())
+                job.summary_data_['summary']['qobj_config']['n_qubits'],
+                3,
+                f"Job {job.job_id()} does not have correct data.",
             )
 
     @skip('outdated')
@@ -453,9 +459,11 @@ class TestIBMQJob(IBMQTestCase):
             with self.subTest(filter=db_filter):
                 job_list = self.sim_backend.jobs(limit=25, db_filter=db_filter)
                 self.assertTrue(job_list)
-                self.assertNotIn(job.job_id(), [rjob.job_id() for rjob in job_list],
-                                 "Job {} with creation date {} should not be returned".format(
-                                     job.job_id(), job_utc))
+                self.assertNotIn(
+                    job.job_id(),
+                    [rjob.job_id() for rjob in job_list],
+                    f"Job {job.job_id()} with creation date {job_utc} should not be returned",
+                )
 
     # def test_retrieve_jobs_order(self):
     #     """Test retrieving jobs with different orders."""
@@ -500,8 +508,10 @@ class TestIBMQJob(IBMQTestCase):
 
         job = backend.run(schedules, meas_level=1, shots=256)
         job.wait_for_final_state(wait=300, callback=self.simple_job_callback)
-        self.assertTrue(job.done(), "Job {} didn't complete successfully.".format(job.job_id()))
-        self.assertIsNotNone(job.result(), "Job {} has no result.".format(job.job_id()))
+        self.assertTrue(
+            job.done(), f"Job {job.job_id()} didn't complete successfully."
+        )
+        self.assertIsNotNone(job.result(), f"Job {job.job_id()} has no result.")
 
     @skip('outdated')
     def test_retrieve_from_retired_backend(self):

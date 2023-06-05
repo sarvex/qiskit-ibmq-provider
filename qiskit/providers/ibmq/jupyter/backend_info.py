@@ -48,43 +48,53 @@ def backend_widget(backend: Union[IBMQBackend, FakeBackend]) -> None:
     cred = backend._credentials
     last_tab = vue.TabItem(children=[])
     livedata = LiveDataVisualization()
-    card = vue.Card(height=600, outlined=True,
-                    children=[
-                        vue.Toolbar(flat=True, color="#002d9c",
-                                    children=[
-                                        vue.ToolbarTitle(children=['{} @ ({}/{}/{})'.format(
-                                            backend.name(),
-                                            cred.hub,
-                                            cred.group,
-                                            cred.project)],
-                                                         style_="color:white")]),
-                        vue.Tabs(vertical=True,
-                                 children=[
-                                     vue.Tab(children=['Configuration']),
-                                     vue.Tab(children=['Qubits']),
-                                     vue.Tab(children=['Non-local Gates']),
-                                     vue.Tab(children=['Error map']),
-                                     vue.Tab(children=['Live Data']),
-                                     vue.Tab(children=['Job Summary']),
-                                     vue.TabItem(children=[config_tab(backend)]),
-                                     vue.TabItem(children=[qubits_tab(backend)]),
-                                     vue.TabItem(children=[gates_tab(backend)]),
-                                     vue.TabItem(
-                                         children=[
-                                             iplot_error_map(
-                                                 backend, figsize=(None, None), as_widget=True
-                                             )
-                                         ]
-                                     ),
-                                     vue.TabItem(
-                                         children=[
-                                             livedata.create_visualization(
-                                                 backend, figsize=(11, 9), show_title=False
-                                             )
-                                         ]
-                                     ),
-                                     last_tab])
-                    ])
+    card = vue.Card(
+        height=600,
+        outlined=True,
+        children=[
+            vue.Toolbar(
+                flat=True,
+                color="#002d9c",
+                children=[
+                    vue.ToolbarTitle(
+                        children=[
+                            f'{backend.name()} @ ({cred.hub}/{cred.group}/{cred.project})'
+                        ],
+                        style_="color:white",
+                    )
+                ],
+            ),
+            vue.Tabs(
+                vertical=True,
+                children=[
+                    vue.Tab(children=['Configuration']),
+                    vue.Tab(children=['Qubits']),
+                    vue.Tab(children=['Non-local Gates']),
+                    vue.Tab(children=['Error map']),
+                    vue.Tab(children=['Live Data']),
+                    vue.Tab(children=['Job Summary']),
+                    vue.TabItem(children=[config_tab(backend)]),
+                    vue.TabItem(children=[qubits_tab(backend)]),
+                    vue.TabItem(children=[gates_tab(backend)]),
+                    vue.TabItem(
+                        children=[
+                            iplot_error_map(
+                                backend, figsize=(None, None), as_widget=True
+                            )
+                        ]
+                    ),
+                    vue.TabItem(
+                        children=[
+                            livedata.create_visualization(
+                                backend, figsize=(11, 9), show_title=False
+                            )
+                        ]
+                    ),
+                    last_tab,
+                ],
+            ),
+        ],
+    )
 
     # Load job data async for a bit better performance
     thread = threading.Thread(target=_async_job_loader,

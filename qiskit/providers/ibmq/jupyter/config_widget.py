@@ -35,16 +35,12 @@ def config_tab(backend: Union[IBMQBackend, FakeBackend]) -> wid.GridBox:
     """
     status = backend.status().to_dict()
     config = backend.configuration().to_dict()
-    next_resrv = get_next_reservation(backend)
-    if next_resrv:
-        reservation_str = "in {} ({}m)".format(duration_difference(next_resrv.start_datetime),
-                                               next_resrv.duration)
+    if next_resrv := get_next_reservation(backend):
+        reservation_str = f"in {duration_difference(next_resrv.start_datetime)} ({next_resrv.duration}m)"
     else:
         reservation_str = '-'
 
-    config_dict = {**status, **config}
-    config_dict['reservation'] = reservation_str
-
+    config_dict = {**status, **config, 'reservation': reservation_str}
     upper_list = ['n_qubits']
 
     if 'quantum_volume' in config.keys():
@@ -62,10 +58,11 @@ def config_tab(backend: Union[IBMQBackend, FakeBackend]) -> wid.GridBox:
     # Look for hamiltonian
     if 'hamiltonian' in lower_list:
         htex = config_dict['hamiltonian']['h_latex']
-        config_dict['hamiltonian'] = "$$%s$$" % htex
+        config_dict['hamiltonian'] = f"$${htex}$$"
 
-    upper_str = "<table>"
-    upper_str += """<style>
+    upper_str = (
+        "<table>"
+        + """<style>
 table {
     border-collapse: collapse;
     width: auto;
@@ -79,15 +76,14 @@ th, td {
 
 tr:nth-child(even) {background-color: #f6f6f6;}
 </style>"""
-
+    )
     footer = "</table>"
 
     # Upper HBox widget data
 
     upper_str += "<tr><th>Property</th><th>Value</th></tr>"
     for key in upper_list:
-        upper_str += "<tr><td><font style='font-weight:bold'>%s</font></td><td>%s</td></tr>" % (
-            key, config_dict[key])
+        upper_str += f"<tr><td><font style='font-weight:bold'>{key}</font></td><td>{config_dict[key]}</td></tr>"
     upper_str += footer
 
     upper_table = wid.HTMLMath(
@@ -106,8 +102,9 @@ tr:nth-child(even) {background-color: #f6f6f6;}
                                               justify_content='center',
                                               width='auto'))
 
-    lower_str = "<table>"
-    lower_str += """<style>
+    lower_str = (
+        "<table>"
+        + """<style>
 table {
     border-collapse: collapse;
     width: auto;
@@ -120,27 +117,29 @@ th, td {
 
 tr:nth-child(even) {background-color: #f6f6f6;}
 </style>"""
+    )
     lower_str += "<tr><th></th><th></th></tr>"
     for key in lower_list:
         if key != 'name':
-            lower_str += "<tr><td>%s</td><td>%s</td></tr>" % (
-                key, config_dict[key])
+            lower_str += f"<tr><td>{key}</td><td>{config_dict[key]}</td></tr>"
     lower_str += footer
 
     lower_table = wid.HTMLMath(value=lower_str,
                                layout=wid.Layout(width='auto',
                                                  grid_area='bottom'))
 
-    grid = wid.GridBox(children=[upper_table, image_widget, lower_table],
-                       layout=wid.Layout(max_height='500px',
-                                         margin='10px',
-                                         overflow='hidden scroll',
-                                         grid_template_rows='auto auto',
-                                         grid_template_columns='33% 21% 21% 21%',
-                                         grid_template_areas='''
+    return wid.GridBox(
+        children=[upper_table, image_widget, lower_table],
+        layout=wid.Layout(
+            max_height='500px',
+            margin='10px',
+            overflow='hidden scroll',
+            grid_template_rows='auto auto',
+            grid_template_columns='33% 21% 21% 21%',
+            grid_template_areas='''
                                          "left right right right"
                                          "bottom bottom bottom bottom"
                                          ''',
-                                         grid_gap='0px 0px'))
-
-    return grid
+            grid_gap='0px 0px',
+        ),
+    )

@@ -63,7 +63,7 @@ class TestIBMQFactoryEnableAccount(IBMQTestCase):
     def test_non_auth_url_with_hub(self):
         """Test login into a non-auth account with h/g/p."""
         qe_token = 'invalid'
-        qe_url = API_URL + '/Hubs/X/Groups/Y/Projects/Z'
+        qe_url = f'{API_URL}/Hubs/X/Groups/Y/Projects/Z'
 
         with self.assertRaises(IBMQAccountCredentialsInvalidUrl) as context_manager:
             self.factory.enable_account(qe_token, qe_url)
@@ -214,7 +214,7 @@ class TestIBMQFactoryAccounts(IBMQTestCase):
         # Get a non default provider.
         non_default_provider = get_provider(self.factory, qe_token, qe_url, default=False)
 
-        with custom_qiskitrc(), no_envs(CREDENTIAL_ENV_VARS):
+        with (custom_qiskitrc(), no_envs(CREDENTIAL_ENV_VARS)):
             self.factory.save_account(token=qe_token, url=qe_url,
                                       hub=non_default_provider.credentials.hub,
                                       group=non_default_provider.credentials.group,
@@ -224,9 +224,9 @@ class TestIBMQFactoryAccounts(IBMQTestCase):
                 # Prevent tokens from being logged.
                 saved_provider.credentials.token = None
                 non_default_provider.credentials.token = None
-                self.fail("loaded default provider ({}) != expected ({})".format(
-                    saved_provider.credentials.__dict__,
-                    non_default_provider.credentials.__dict__))
+                self.fail(
+                    f"loaded default provider ({saved_provider.credentials.__dict__}) != expected ({non_default_provider.credentials.__dict__})"
+                )
 
         self.assertEqual(self.factory._credentials.token, qe_token)
         self.assertEqual(self.factory._credentials.url, qe_url)
@@ -260,13 +260,12 @@ class TestIBMQFactoryAccounts(IBMQTestCase):
 
         for invalid_hgp, error_message in invalid_hgps.items():
             with self.subTest(invalid_hgp=invalid_hgp):
-                with custom_qiskitrc() as temp_qiskitrc, \
-                        no_envs(CREDENTIAL_ENV_VARS):
+                with (custom_qiskitrc() as temp_qiskitrc, no_envs(CREDENTIAL_ENV_VARS)):
                     # Save the account.
                     self.factory.save_account(token=self.token, url=AUTH_URL)
                     # Add an invalid provider field to the account stored.
                     with open(temp_qiskitrc.tmp_file.name, 'a') as _file:
-                        _file.write('default_provider = {}'.format(invalid_hgp))
+                        _file.write(f'default_provider = {invalid_hgp}')
                     # Ensure an error is raised if the stored provider is in an invalid format.
                     with self.assertRaises(IBMQAccountError) as context_manager:
                         self.factory.load_account()

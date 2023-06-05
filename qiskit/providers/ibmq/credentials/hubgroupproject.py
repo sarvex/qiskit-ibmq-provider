@@ -50,15 +50,13 @@ class HubGroupProject:
             hub, group, project = hgp.split('/')
             if (not hub) or (not group) or (not project):
                 raise HubGroupProjectInvalidStateError(
-                    'The hub/group/project "{}" is in an invalid format. '
-                    'Every field must be specified: hub = "{}", group = "{}", project = "{}".'
-                    .format(hgp, hub, group, project))
+                    f'The hub/group/project "{hgp}" is in an invalid format. Every field must be specified: hub = "{hub}", group = "{group}", project = "{project}".'
+                )
         except ValueError:
             # Not enough, or too many, values were provided.
             raise HubGroupProjectInvalidStateError(
-                'The hub/group/project "{}" is in an invalid format. '
-                'Use the "<hub_name>/<group_name>/<project_name>" format.'
-                .format(hgp))
+                f'The hub/group/project "{hgp}" is in an invalid format. Use the "<hub_name>/<group_name>/<project_name>" format.'
+            )
 
         return cls(hub, group, project)
 
@@ -93,9 +91,8 @@ class HubGroupProject:
         """
         if (not self.hub) or (not self.group) or (not self.project):
             raise HubGroupProjectInvalidStateError(
-                'The hub/group/project cannot be represented in the stored format. '
-                'Every field must be specified: hub = "{}", group = "{}", project = "{}".'
-                .format(self.hub, self.group, self.project))
+                f'The hub/group/project cannot be represented in the stored format. Every field must be specified: hub = "{self.hub}", group = "{self.group}", project = "{self.project}".'
+            )
         return '/'.join([self.hub, self.group, self.project])
 
     def to_tuple(self) -> Tuple[Optional[str], Optional[str], Optional[str]]:

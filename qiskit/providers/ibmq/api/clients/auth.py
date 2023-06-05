@@ -55,11 +55,11 @@ class AuthClient(BaseClient):
         self.auth_api.session.access_token = access_token
         self._service_urls = self.user_urls()
 
-        # Create the api server client, using the access token.
-        base_api = Api(RetrySession(self._service_urls['http'], access_token,
-                                    **request_kwargs))
-
-        return base_api
+        return Api(
+            RetrySession(
+                self._service_urls['http'], access_token, **request_kwargs
+            )
+        )
 
     def _request_access_token(self) -> str:
         """Request a new access token from the API authentication service.

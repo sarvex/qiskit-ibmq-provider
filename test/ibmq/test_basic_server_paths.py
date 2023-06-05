@@ -90,8 +90,9 @@ class TestBasicServerPaths(IBMQTestCase):
         for desc, provider in self.providers.items():
             pulse_backends = provider.backends(open_pulse=True, operational=True)
             if not pulse_backends:
-                raise self.skipTest('Skipping pulse test since no pulse backend '
-                                    'found for "{}"'.format(desc))
+                raise self.skipTest(
+                    f'Skipping pulse test since no pulse backend found for "{desc}"'
+                )
 
             pulse_backend = pulse_backends[0]
             with self.subTest(desc=desc, backend=pulse_backend):
@@ -115,10 +116,9 @@ class TestBasicServerPaths(IBMQTestCase):
         transpiled = transpile(circs, backend)
         for _ in range(max_retry):
             try:
-                job = backend.run(transpiled)
-                return job
+                return backend.run(transpiled)
             except IBMQBackendJobLimitError as err:
                 limit_error = err
                 time.sleep(1)
 
-        self.fail("Unable to submit job after {} retries: {}".format(max_retry, limit_error))
+        self.fail(f"Unable to submit job after {max_retry} retries: {limit_error}")

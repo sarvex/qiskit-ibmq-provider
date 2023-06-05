@@ -102,10 +102,10 @@ def requires_providers(func):
         if premium_provider is None:
             raise SkipTest('Requires both the public provider and a premium provider.')
 
-        kwargs.update({
-            'providers': {'public_provider': public_provider,
-                          'premium_provider': premium_provider}
-        })
+        kwargs['providers'] = {
+            'public_provider': public_provider,
+            'premium_provider': premium_provider,
+        }
 
         return func(*args, **kwargs)
 
@@ -130,7 +130,7 @@ def requires_provider(func):
     def _wrapper(*args, **kwargs):
         _enable_account(kwargs.pop('qe_token'), kwargs.pop('qe_url'))
         provider = _get_custom_provider(IBMQ) or list(IBMQ._providers.values())[0]
-        kwargs.update({'provider': provider})
+        kwargs['provider'] = provider
 
         return func(*args, **kwargs)
 
@@ -161,7 +161,7 @@ def requires_private_provider(func):
 
         hgp = hgp.split('/')
         provider = IBMQ.get_provider(hub=hgp[0], group=hgp[1], project=hgp[2])
-        kwargs.update({'provider': provider})
+        kwargs['provider'] = provider
 
         return func(*args, **kwargs)
 
@@ -197,7 +197,7 @@ def requires_device(func):
         _backend = _get_backend(qe_token=kwargs.pop('qe_token'),
                                 qe_url=kwargs.pop('qe_url'),
                                 backend_name=backend_name)
-        kwargs.update({'backend': _backend})
+        kwargs['backend'] = _backend
         return func(obj, *args, **kwargs)
 
     return _wrapper
@@ -223,7 +223,7 @@ def requires_runtime_device(func):
         _backend = _get_backend(qe_token=kwargs.pop('qe_token'),
                                 qe_url=kwargs.pop('qe_url'),
                                 backend_name=backend_name)
-        kwargs.update({'backend': _backend})
+        kwargs['backend'] = _backend
         return func(obj, *args, **kwargs)
 
     return _wrapper
@@ -240,8 +240,7 @@ def _get_backend(qe_token, qe_url, backend_name):
         # Put desired provider as the first in the list.
         providers = [provider] + IBMQ.providers()
         for provider in providers:
-            backends = provider.backends(name=backend_name)
-            if backends:
+            if backends := provider.backends(name=backend_name):
                 _backend = backends[0]
                 break
     else:
@@ -312,8 +311,7 @@ def _enable_account(qe_token: str, qe_url: str) -> None:
         qe_token: API token.
         qe_url: API URL.
     """
-    active_account = IBMQ.active_account()
-    if active_account:
+    if active_account := IBMQ.active_account():
         if active_account.get('token', '') == qe_token:
             return
         IBMQ.disable_account()

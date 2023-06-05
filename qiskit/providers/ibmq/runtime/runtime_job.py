@@ -208,8 +208,7 @@ class RuntimeJob:
         while status not in JOB_FINAL_STATES:
             elapsed_time = time.time() - start_time
             if timeout is not None and elapsed_time >= timeout:
-                raise JobTimeoutError(
-                    'Timeout while waiting for job {}.'.format(self.job_id()))
+                raise JobTimeoutError(f'Timeout while waiting for job {self.job_id()}.')
             time.sleep(wait)
             status = self.status()
 
@@ -314,10 +313,7 @@ class RuntimeJob:
         if self._ws_client_future is None:
             return False
 
-        if self._ws_client_future.done():
-            return False
-
-        return True
+        return not self._ws_client_future.done()
 
     def _start_websocket_client(
             self
@@ -428,7 +424,4 @@ class RuntimeJob:
             response = self._api_client.job_get(job_id=self.job_id())
             self._creation_date = response.get('created', None)
 
-        if not self._creation_date:
-            return None
-        creation_date_local_dt = utc_to_local(self._creation_date)
-        return creation_date_local_dt
+        return None if not self._creation_date else utc_to_local(self._creation_date)

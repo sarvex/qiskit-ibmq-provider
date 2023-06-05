@@ -37,10 +37,10 @@ def ws_proxy_params(credentials: Credentials, ws_url: str) -> Dict:
         proxy_keys = [
             ws_url,
             'wss',
-            'https://' + url_parts.hostname,
+            f'https://{url_parts.hostname}',
             'https',
-            'all://' + url_parts.hostname,
-            'all'
+            f'all://{url_parts.hostname}',
+            'all',
         ]
         for key in proxy_keys:
             if key in proxies:

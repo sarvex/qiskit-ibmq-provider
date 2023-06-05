@@ -196,15 +196,14 @@ class BaseWebsocketClient(BaseClient, ABC):
                     return self._last_message
 
                 msg_to_log = f"A websocket error occurred while streaming for job " \
-                             f"{self._job_id}. Connection closed with {self._server_close_code}."
+                                 f"{self._job_id}. Connection closed with {self._server_close_code}."
                 if self._error is not None:
                     msg_to_log += f"\n{self._error}"
                 logger.info(msg_to_log)
 
                 self._current_retry += 1
                 if self._current_retry > retries:
-                    error_message = "Max retries exceeded: Failed to establish a " \
-                                    f"websocket connection."
+                    error_message = 'Max retries exceeded: Failed to establish a websocket connection.'
                     if self._error:
                         error_message += f" Error: {self._error}"
 
@@ -220,7 +219,7 @@ class BaseWebsocketClient(BaseClient, ABC):
 
         # Execution should not reach here, sanity check.
         exception_message = 'Max retries exceeded: Failed to establish a websocket ' \
-                            'connection due to a network error.'
+                                'connection due to a network error.'
 
         logger.info(exception_message)
         raise WebsocketError(exception_message)

@@ -259,7 +259,7 @@ class LiveDataVisualization:
             (Ipywidget): HTML widget used as title
 
         """
-        margin = "34px" if extra_space is True else "8px"
+        margin = "34px" if extra_space else "8px"
         content = f"<h5 style='margin-top: {margin};margin-bottom: 8px;'><b>{title}</b></h5>"
         return widgets.HTML(value=content)
 
@@ -380,10 +380,10 @@ class LiveDataVisualization:
         while self.widget:
             previous_len = len(self.jobs)
             self.jobs = self.get_livedata_jobs()
-            new_len = len(self.jobs)
             if len(self.jobs) > 0:
                 self.jobs_combo.options = self.job_ids
                 if self.jobs_combo.value != "":
+                    new_len = len(self.jobs)
                     if previous_len == new_len:
                         self.job_information_view.set_job(
                             self.jobs[self.job_ids.index(self.jobs_combo.value)]
@@ -590,11 +590,11 @@ class LivePlot:
         fig = plt.figure(constrained_layout=True, figsize=fig_size)
 
         mosaic_grid = []
-        level_0_row = ["l0", "l0", "l0"]
-        level_1_row = ["l1a", "l1b", "l1c"]
         if ENABLE_LEVEL_0:
+            level_0_row = ["l0", "l0", "l0"]
             mosaic_grid.append(level_0_row)
         if ENABLE_LEVEL_1:
+            level_1_row = ["l1a", "l1b", "l1c"]
             mosaic_grid.append(level_1_row)
 
         ax_dict = fig.subplot_mosaic(
@@ -631,7 +631,7 @@ class LivePlot:
         self.fig_generated = True
 
         encoded = self.fig_to_base64(fig)
-        html_image = '<img src="data:image/png;base64, {}">'.format(encoded.decode("utf-8"))
+        html_image = f'<img src="data:image/png;base64, {encoded.decode("utf-8")}">'
         self._plotview.value = html_image
 
     def update_live_data(self, data) -> None:
@@ -645,8 +645,6 @@ class LivePlot:
 
         n_circuits = self.get_circuits_number(data, self._selected_channel)
 
-        l0a = self._graphs[0]
-        l0b = self._graphs[1]
         l1a = self._graphs[2]
         l1b = self._graphs[3]
         l1c = self._graphs[4]
@@ -654,17 +652,16 @@ class LivePlot:
 
         if ENABLE_LEVEL_0:
             data_l0a = self.get_l0_data(data, self._selected_channel)
-            plot_data_l0b = None
-            if n_circuits > 1:
-                plot_data_l0b = data_l0a[-1]
-
+            plot_data_l0b = data_l0a[-1] if n_circuits > 1 else None
             plot_data_l0a = data_l0a[0]
 
             total_data = len(plot_data_l0a)
             time_value = np.arange(0, total_data, 1)
 
+            l0a = self._graphs[0]
             l0a.set_data(time_value, plot_data_l0a)
             self.set_view_limits(self._raw_plot, None, plot_data_l0a, center_origin=True)
+            l0b = self._graphs[1]
             if l0b is not None:
                 l0b.set_data(time_value, plot_data_l0b)
                 self.set_view_limits(self._raw_plot, None, plot_data_l0b, center_origin=True)
@@ -698,7 +695,7 @@ class LivePlot:
                 l1b.set_offsets(np.c_[x, y])
 
         encoded = self.fig_to_base64(self.fig)
-        html_image = '<img src="data:image/png;base64, {}">'.format(encoded.decode("utf-8"))
+        html_image = f'<img src="data:image/png;base64, {encoded.decode("utf-8")}">'
         self._plotview.value = html_image
 
     # Views control
@@ -1153,8 +1150,9 @@ class JobInformationView:
 
     def job_information_content(self, job) -> str:
         """Create the job information content"""
-        content = "<table class='livedata-table'>"
-        content += """
+        content = (
+            "<table class='livedata-table'>"
+            + """
             <style>
             .livedata-table {
                 border-collapse: collapse;
@@ -1171,6 +1169,7 @@ class JobInformationView:
                 padding-bottom: 0px;
             }
         """
+        )
         content += f".livedata-table tr td:nth-child(1) {{ color: {CarbonColors.GRAY60.value};}}"
         content += f".livedata-table tr td:nth-child(2) {{ color: {CarbonColors.GRAY80.value};}}"
         content += f".livedata-table tr td:nth-child(4) {{ color: {CarbonColors.GRAY60.value};}}"
@@ -1225,10 +1224,7 @@ class JobInformationView:
 
     def get_job_status(self, job) -> str:
         """Get the status of the job"""
-        if job:
-            status = job.status().name
-        else:
-            status = "-"
+        status = job.status().name if job else "-"
         return status
 
     def get_job_completion_time(self, job) -> str:

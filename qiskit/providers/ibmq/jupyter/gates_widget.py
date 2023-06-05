@@ -43,8 +43,9 @@ def gates_tab(backend: Union[IBMQBackend, FakeBackend]) -> wid.GridBox:
     update_date_widget = wid.HTML(value=header_html,
                                   layout=wid.Layout(grid_area='top'))
 
-    gate_html = "<table>"
-    gate_html += """<style>
+    gate_html = (
+        "<table>"
+        + """<style>
 table {
     border-collapse: collapse;
     font-family:IBM Plex Sans, Arial, sans-serif !important;
@@ -58,7 +59,7 @@ th, td {
 
 tr:nth-child(even) {background-color: #f6f6f6;};
 </style>"""
-
+    )
     gate_html += "<tr><th></th><th>Type</th><th>Gate error</th></tr>"
     gate_footer = "</table>"
 
@@ -76,8 +77,7 @@ tr:nth-child(even) {background-color: #f6f6f6;};
 
         left_table += "<tr><td><font style='font-weight:bold'>%s</font>"
         left_table += "</td><td>%s</td><td>%s</td></tr>"
-        left_table = left_table % ("{}{}_{}".format(ttype, qubits[0], qubits[1]),
-                                   ttype, error)
+        left_table %= (f"{ttype}{qubits[0]}_{qubits[1]}", ttype, error)
     left_table += gate_footer
 
     middle_table = gate_html
@@ -90,8 +90,7 @@ tr:nth-child(even) {background-color: #f6f6f6;};
 
         middle_table += "<tr><td><font style='font-weight:bold'>%s</font>"
         middle_table += "</td><td>%s</td><td>%s</td></tr>"
-        middle_table = middle_table % ("{}{}_{}".format(ttype, qubits[0], qubits[1]),
-                                       ttype, error)
+        middle_table %= (f"{ttype}{qubits[0]}_{qubits[1]}", ttype, error)
     middle_table += gate_footer
 
     right_table = gate_html
@@ -104,8 +103,7 @@ tr:nth-child(even) {background-color: #f6f6f6;};
 
         right_table += "<tr><td><font style='font-weight:bold'>%s</font>"
         right_table += "</td><td>%s</td><td>%s</td></tr>"
-        right_table = right_table % ("{}{}_{}".format(ttype, qubits[0], qubits[1]),
-                                     ttype, error)
+        right_table %= (f"{ttype}{qubits[0]}_{qubits[1]}", ttype, error)
     right_table += gate_footer
 
     left_table_widget = wid.HTML(value=left_table,
@@ -115,18 +113,24 @@ tr:nth-child(even) {background-color: #f6f6f6;};
     right_table_widget = wid.HTML(value=right_table,
                                   layout=wid.Layout(grid_area='right'))
 
-    grid = wid.GridBox(children=[update_date_widget, left_table_widget,
-                                 middle_table_widget, right_table_widget],
-                       layout=wid.Layout(width='100%',
-                                         max_height='500px',
-                                         margin='10px',
-                                         overflow='hidden scroll',
-                                         grid_template_rows='auto auto',
-                                         grid_template_columns='33% 33% 33%',
-                                         grid_template_areas='''
+    return wid.GridBox(
+        children=[
+            update_date_widget,
+            left_table_widget,
+            middle_table_widget,
+            right_table_widget,
+        ],
+        layout=wid.Layout(
+            width='100%',
+            max_height='500px',
+            margin='10px',
+            overflow='hidden scroll',
+            grid_template_rows='auto auto',
+            grid_template_columns='33% 33% 33%',
+            grid_template_areas='''
                                                              "top top top"
                                                              "left middle right"
                                                              ''',
-                                         grid_gap='0px 0px'))
-
-    return grid
+            grid_gap='0px 0px',
+        ),
+    )

@@ -110,12 +110,12 @@ class IQXDashboard(Subscriber):
                                                         project=pro.credentials.project)
             for back in pro.backends():
                 if not back.configuration().simulator:
-                    if back.name() not in ibmq_backends.keys():
-                        ibmq_backends[back.name()] = \
-                            BackendWithProviders(backend=back, providers=[pro_name])
-                    else:
+                    if back.name() in ibmq_backends:
                         ibmq_backends[back.name()].providers.append(pro_name)
 
+                    else:
+                        ibmq_backends[back.name()] = \
+                                BackendWithProviders(backend=back, providers=[pro_name])
         self.backend_dict = ibmq_backends
 
     def refresh_jobs_board(self) -> None:
@@ -173,19 +173,16 @@ class IQXDashboard(Subscriber):
             job_wid = self.jobs[ind]
             # update status
             if update_info[1] == 'DONE':
-                stat = "<font style='color:#34BC6E'>{}</font>".format(update_info[1])
+                stat = f"<font style='color:#34BC6E'>{update_info[1]}</font>"
             elif update_info[1] == 'ERROR':
-                stat = "<font style='color:#DC267F'>{}</font>".format(update_info[1])
+                stat = f"<font style='color:#DC267F'>{update_info[1]}</font>"
             elif update_info[1] == 'CANCELLED':
-                stat = "<font style='color:#FFB000'>{}</font>".format(update_info[1])
+                stat = f"<font style='color:#FFB000'>{update_info[1]}</font>"
             else:
                 stat = update_info[1]
             job_wid.children[3].value = stat
             # update estimated start time.
-            if update_info[2] == 0:
-                est_start = '-'
-            else:
-                est_start = str(update_info[2])
+            est_start = '-' if update_info[2] == 0 else str(update_info[2])
             job_wid.children[4].value = est_start
 
     def cancel_job(self, job_id: str) -> None:
@@ -225,7 +222,11 @@ class IQXDashboard(Subscriber):
         do_refresh = False
         for job in self.jobs:
             job_str = job.children[3].value
-            if not (('DONE' in job_str) or ('CANCELLED' in job_str) or ('ERROR' in job_str)):
+            if (
+                'DONE' not in job_str
+                and 'CANCELLED' not in job_str
+                and 'ERROR' not in job_str
+            ):
                 _temp_jobs.append(job)
             else:
                 job.close()

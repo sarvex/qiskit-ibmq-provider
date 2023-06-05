@@ -91,9 +91,7 @@ class TestIBMQJobManager(IBMQTestCase):
         """Test having circuits split into multiple jobs."""
         max_circs = self.fake_api_backend.configuration().max_experiments
 
-        circs = []
-        for _ in range(max_circs+2):
-            circs.append(self._qc)
+        circs = [self._qc for _ in range(max_circs+2)]
         job_set = self._jm.run(circs, backend=self.fake_api_backend)
         job_set.results()
         statuses = job_set.statuses()
@@ -211,7 +209,7 @@ class TestIBMQJobManager(IBMQTestCase):
                 circs = []
                 for i in range(count):
                     new_qc = copy.deepcopy(self._qc)
-                    new_qc.name = "test_qc_{}".format(i)
+                    new_qc.name = f"test_qc_{i}"
                     circs.append(new_qc)
 
                 job_set = self._jm.run(circs, backend=self.sim_backend,
@@ -223,10 +221,11 @@ class TestIBMQJobManager(IBMQTestCase):
 
                 rjob_set = IBMQJobManager().retrieve_job_set(
                     job_set_id=job_set.job_set_id(), provider=self.provider)
-                self.assertEqual({job.job_id() for job in job_set.jobs()},
-                                 {rjob.job_id() for rjob in rjob_set.jobs()},
-                                 "Unexpected jobs retrieved. Job set id used was {}.".format(
-                                     job_set.job_set_id()))
+                self.assertEqual(
+                    {job.job_id() for job in job_set.jobs()},
+                    {rjob.job_id() for rjob in rjob_set.jobs()},
+                    f"Unexpected jobs retrieved. Job set id used was {job_set.job_set_id()}.",
+                )
                 self.assertEqual(rjob_set.tags(), job_set.tags())
                 self.assertEqual(len(rjob_set.qobjs()), len(job_set.qobjs()))
 
@@ -252,9 +251,11 @@ class TestIBMQJobManager(IBMQTestCase):
             time.sleep(1)
 
         rjobs = self.provider.backend.jobs(job_tags=job_tags, start_datetime=self.last_week)
-        self.assertEqual({job.job_id() for job in job_set.jobs()},
-                         {rjob.job_id() for rjob in rjobs},
-                         "Unexpected jobs retrieved. Job tag used was {}".format(job_tags))
+        self.assertEqual(
+            {job.job_id() for job in job_set.jobs()},
+            {rjob.job_id() for rjob in rjobs},
+            f"Unexpected jobs retrieved. Job tag used was {job_tags}",
+        )
         self.assertEqual(job_set.tags(), job_tags)
 
     def test_job_limit(self):
@@ -330,7 +331,7 @@ class TestIBMQJobManager(IBMQTestCase):
             time.sleep(1)
 
         tag_prefix = uuid.uuid4().hex
-        replacement_tags = ['{}_new_tag_{}'.format(tag_prefix, i) for i in range(2)]
+        replacement_tags = [f'{tag_prefix}_new_tag_{i}' for i in range(2)]
         _ = job_set.update_tags(replacement_tags=replacement_tags)
 
         for job in job_set.jobs():
@@ -377,7 +378,7 @@ class TestIBMQJobManager(IBMQTestCase):
         circs = []
         for i in range(max_per_job*2+1):
             new_qc = copy.deepcopy(self._qc)
-            new_qc.name = "test_qc_{}".format(i)
+            new_qc.name = f"test_qc_{i}"
             circs.append(new_qc)
         job_set = self._jm.run(circs, backend=self.fake_api_backend,
                                max_experiments_per_job=max_per_job)
@@ -450,12 +451,11 @@ class TestIBMQJobManager(IBMQTestCase):
             self.assertTrue(managed_results_params)
             self.assertTrue(result_params)
             # pylint: disable=duplicate-string-formatting-argument
-            self.assertEqual(result_params, managed_results_params,
-                             "The signatures for method `{}` differ. "
-                             "`Result.{}` params = {} "
-                             "`ManagedResults.{}` params = {}."
-                             .format(name, name, managed_results_params,
-                                     name, result_params))
+            self.assertEqual(
+                result_params,
+                managed_results_params,
+                f"The signatures for method `{name}` differ. `Result.{name}` params = {managed_results_params} `ManagedResults.{name}` params = {result_params}.",
+            )
 
     def _get_class_methods(self, cls):
         """Get public class methods from its namespace.
@@ -465,8 +465,8 @@ class TestIBMQJobManager(IBMQTestCase):
             and instance, the "methods" are categorized as functions.
             Methods are only bound when they belong to an actual instance.
         """
-        cls_methods = {}
-        for name, method in cls.__dict__.items():
-            if isfunction(method) and not name.startswith('_'):
-                cls_methods[name] = method
-        return cls_methods
+        return {
+            name: method
+            for name, method in cls.__dict__.items()
+            if isfunction(method) and not name.startswith('_')
+        }

@@ -225,7 +225,7 @@ class IBMQBackendService:
 
         if status:
             status_filter = self._get_status_db_filter(status)
-            api_filter.update(status_filter)
+            api_filter |= status_filter
 
         if job_name:
             api_filter['name'] = {"regexp": job_name}
@@ -242,14 +242,12 @@ class IBMQBackendService:
             if job_tags_operator == "OR":
                 api_filter['tags'] = {'inq': job_tags}
             elif job_tags_operator == "AND":
-                and_tags = []
-                for tag in job_tags:
-                    and_tags.append({'tags': tag})
+                and_tags = [{'tags': tag} for tag in job_tags]
                 api_filter['and'] = and_tags
             else:
                 raise IBMQBackendValueError(
-                    '"{}" is not a valid job_tags_operator value. '
-                    'Valid values are "AND" and "OR"'.format(job_tags_operator))
+                    f'"{job_tags_operator}" is not a valid job_tags_operator value. Valid values are "AND" and "OR"'
+                )
 
         if experiment_id:
             api_filter['experimentTag'] = experiment_id
@@ -400,7 +398,7 @@ class IBMQBackendService:
 
         if status:
             status_filter = self._get_status_db_filter(status)
-            api_filter.update(status_filter)
+            api_filter |= status_filter
 
         if job_name:
             api_filter['name'] = {"regexp": job_name}
@@ -417,20 +415,16 @@ class IBMQBackendService:
             if job_tags_operator == "OR":
                 api_filter['tags'] = {'inq': job_tags}
             elif job_tags_operator == "AND":
-                and_tags = []
-                for tag in job_tags:
-                    and_tags.append({'tags': tag})
+                and_tags = [{'tags': tag} for tag in job_tags]
                 api_filter['and'] = and_tags
             else:
                 raise IBMQBackendValueError(
-                    '"{}" is not a valid job_tags_operator value. '
-                    'Valid values are "AND" and "OR"'.format(job_tags_operator))
+                    f'"{job_tags_operator}" is not a valid job_tags_operator value. Valid values are "AND" and "OR"'
+                )
 
-        # Retrieve all requested jobs.
-        jobs_id_list = self._get_job_ids(api_filter=api_filter, limit=limit,
-                                         skip=skip, descending=descending)
-
-        return jobs_id_list
+        return self._get_job_ids(
+            api_filter=api_filter, limit=limit, skip=skip, descending=descending
+        )
 
     def _get_job_ids(
             self,
@@ -543,13 +537,13 @@ class IBMQBackendService:
                        if gt_op in cur_dt_filter]
             if 'between' in cur_dt_filter and len(cur_dt_filter['between']) > 0:
                 gt_list.append(cur_dt_filter.pop('between')[0])
-            gte_dt = max(gt_list) if gt_list else None
+            gte_dt = max(gt_list, default=None)
         if not lte_dt:
             lt_list = [cur_dt_filter.pop(lt_op) for lt_op in ['lt', 'lte']
                        if lt_op in cur_dt_filter]
             if 'between' in cur_dt_filter and len(cur_dt_filter['between']) > 1:
                 lt_list.append(cur_dt_filter.pop('between')[1])
-            lte_dt = min(lt_list) if lt_list else None
+            lte_dt = min(lt_list, default=None)
 
         new_dt_filter = {}  # type: Dict[str, Union[str, List[str]]]
         if gte_dt and lte_dt:
@@ -601,9 +595,8 @@ class IBMQBackendService:
                 status = JobStatus[status.upper()]
             except KeyError:
                 raise IBMQBackendValueError(
-                    '"{}" is not a valid status value. Valid values are {}'.format(
-                        status, ", ".join(job_status.name for job_status in JobStatus))) \
-                    from None
+                    f'"{status}" is not a valid status value. Valid values are {", ".join(job_status.name for job_status in JobStatus)}'
+                ) from None
 
         _status_filter = {}  # type: Dict[str, Any]
         if status == JobStatus.INITIALIZING:
@@ -626,8 +619,8 @@ class IBMQBackendService:
             _status_filter = {'status': {'regexp': '^ERROR'}}
         else:
             raise IBMQBackendValueError(
-                '"{}" is not a valid status value. Valid values are {}'.format(
-                    status, ", ".join(job_status.name for job_status in JobStatus)))
+                f'"{status}" is not a valid status value. Valid values are {", ".join(job_status.name for job_status in JobStatus)}'
+            )
 
         return _status_filter
 
@@ -649,8 +642,7 @@ class IBMQBackendService:
         try:
             job_info = self._provider._api_client.job_get(job_id)
         except ApiError as ex:
-            raise IBMQBackendApiError('Failed to get job {}: {}'
-                                      .format(job_id, str(ex))) from ex
+            raise IBMQBackendApiError(f'Failed to get job {job_id}: {str(ex)}') from ex
 
         # Recreate the backend used for this job.
         backend_name = job_info.get('_backend_info', {}).get('name', 'unknown')
@@ -665,8 +657,8 @@ class IBMQBackendService:
             job = IBMQJob(backend=backend, api_client=self._provider._api_client, **job_info)
         except TypeError as ex:
             raise IBMQBackendApiProtocolError(
-                'Unexpected return value received from the server '
-                'when retrieving job {}: {}'.format(job_id, str(ex))) from ex
+                f'Unexpected return value received from the server when retrieving job {job_id}: {str(ex)}'
+            ) from ex
 
         return job
 

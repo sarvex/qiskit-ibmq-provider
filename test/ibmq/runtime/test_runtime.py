@@ -345,10 +345,7 @@ if __name__ == '__main__':
 
     def test_print_programs(self):
         """Test printing programs."""
-        ids = []
-        for idx in range(3):
-            ids.append(self._upload_program(name=f"name_{idx}"))
-
+        ids = [self._upload_program(name=f"name_{idx}") for idx in range(3)]
         programs = self.runtime.programs()
         with patch('sys.stdout', new=StringIO()) as mock_stdout:
             self.runtime.pprint_programs()
@@ -536,21 +533,16 @@ if __name__ == '__main__':
 
     def test_jobs_no_limit(self):
         """Test retrieving jobs without limit."""
-        jobs = []
         program_id = self._upload_program()
-        for _ in range(25):
-            jobs.append(self._run_program(program_id))
+        jobs = [self._run_program(program_id) for _ in range(25)]
         rjobs = self.runtime.jobs(limit=None)
         self.assertEqual(25, len(rjobs))
 
     def test_jobs_limit(self):
         """Test retrieving jobs with limit."""
-        jobs = []
         job_count = 25
         program_id = self._upload_program()
-        for _ in range(job_count):
-            jobs.append(self._run_program(program_id))
-
+        jobs = [self._run_program(program_id) for _ in range(job_count)]
         limits = [21, 30]
         for limit in limits:
             with self.subTest(limit=limit):
@@ -559,19 +551,15 @@ if __name__ == '__main__':
 
     def test_jobs_skip(self):
         """Test retrieving jobs with skip."""
-        jobs = []
         program_id = self._upload_program()
-        for _ in range(5):
-            jobs.append(self._run_program(program_id))
+        jobs = [self._run_program(program_id) for _ in range(5)]
         rjobs = self.runtime.jobs(skip=4)
         self.assertEqual(1, len(rjobs))
 
     def test_jobs_skip_limit(self):
         """Test retrieving jobs with skip and limit."""
-        jobs = []
         program_id = self._upload_program()
-        for _ in range(10):
-            jobs.append(self._run_program(program_id))
+        jobs = [self._run_program(program_id) for _ in range(10)]
         rjobs = self.runtime.jobs(skip=4, limit=2)
         self.assertEqual(2, len(rjobs))
 
@@ -761,10 +749,7 @@ if __name__ == '__main__':
         metadata.update(name=name)
         metadata.update(is_public=is_public)
         metadata.update(max_execution_time=max_execution_time)
-        program_id = self.runtime.upload_program(
-            data=data,
-            metadata=metadata)
-        return program_id
+        return self.runtime.upload_program(data=data, metadata=metadata)
 
     def _run_program(self, program_id=None, inputs=None, job_classes=None, final_status=None,
                      decoder=None, image="", log_level=None):
@@ -778,10 +763,13 @@ if __name__ == '__main__':
             self.runtime._api_client.set_job_classes(job_classes)
         if program_id is None:
             program_id = self._upload_program()
-        job = self.runtime.run(program_id=program_id, inputs=inputs,
-                               options=options, result_decoder=decoder,
-                               image=image)
-        return job
+        return self.runtime.run(
+            program_id=program_id,
+            inputs=inputs,
+            options=options,
+            result_decoder=decoder,
+            image=image,
+        )
 
     def _populate_jobs_with_all_statuses(self, jobs, program_id):
         pending_jobs_count = 0

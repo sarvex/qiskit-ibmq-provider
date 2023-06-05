@@ -36,7 +36,7 @@ class AnalysisResult(RestAdapterBase):
             result_uuid: UUID of the analysis result.
             url_prefix: URL prefix.
         """
-        self.url_prefix = '{}/analysis_results/{}'.format(url_prefix, result_uuid)
+        self.url_prefix = f'{url_prefix}/analysis_results/{result_uuid}'
         super().__init__(session, self.url_prefix)
 
     def update(self, analysis_result: str) -> Dict:

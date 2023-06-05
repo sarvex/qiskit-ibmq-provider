@@ -35,10 +35,9 @@ def get_next_reservation(
     """
     if not isinstance(backend, IBMQBackend):
         return None
-    reservations = backend.reservations(
+    if reservations := backend.reservations(
         start_datetime=datetime.now(),
-        end_datetime=datetime.now() + timedelta(hours=time_period_hr))
-    if reservations:
-        next_reservation = min(reservations, key=lambda rsvr: rsvr.start_datetime)
-        return next_reservation
+        end_datetime=datetime.now() + timedelta(hours=time_period_hr),
+    ):
+        return min(reservations, key=lambda rsvr: rsvr.start_datetime)
     return None

@@ -205,7 +205,7 @@ class Program(RestAdapterBase):
             program_id: ID of the runtime program.
             url_prefix: Prefix to use in the URL.
         """
-        super().__init__(session, '{}/programs/{}'.format(url_prefix, program_id))
+        super().__init__(session, f'{url_prefix}/programs/{program_id}')
 
     def get(self) -> Dict[str, Any]:
         """Return program information.
@@ -297,8 +297,7 @@ class ProgramJob(RestAdapterBase):
             job_id: ID of the program job.
             url_prefix: Prefix to use in the URL.
         """
-        super().__init__(session, '{}/jobs/{}'.format(
-            url_prefix, job_id))
+        super().__init__(session, f'{url_prefix}/jobs/{job_id}')
 
     def get(self) -> Dict:
         """Return program job information.

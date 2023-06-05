@@ -39,9 +39,11 @@ class TestLogger(IBMQTestCase):
             if QISKIT_IBMQ_PROVIDER_LOG_LEVEL in os.environ:
                 del os.environ[QISKIT_IBMQ_PROVIDER_LOG_LEVEL]
             setup_logger(logger)
-            self.assertEqual(logger.level, default_level_not_set,
-                             'The logger level was set to {}, but it should '
-                             'be {}'.format(logger.level, default_level_not_set))
+            self.assertEqual(
+                logger.level,
+                default_level_not_set,
+                f'The logger level was set to {logger.level}, but it should be {default_level_not_set}',
+            )
 
     def test_empty_log_level(self):
         """Test setting up a logger with an empty string log level.
@@ -54,9 +56,11 @@ class TestLogger(IBMQTestCase):
 
         with mock.patch.dict('os.environ', {QISKIT_IBMQ_PROVIDER_LOG_LEVEL: ''}):
             setup_logger(logger)
-            self.assertEqual(logger.level, default_level_not_set,
-                             'The logger level was set to {}, but it should '
-                             'be {}.'.format(logger.level, default_level_not_set))
+            self.assertEqual(
+                logger.level,
+                default_level_not_set,
+                f'The logger level was set to {logger.level}, but it should be {default_level_not_set}.',
+            )
 
     def test_invalid_log_level(self):
         """Test setting up a logger with invalid log levels, should default to `WARNING`.
@@ -71,11 +75,13 @@ class TestLogger(IBMQTestCase):
         for invalid_log_level in invalid_log_levels:
             with self.subTest(invalid_log_level=invalid_log_level):
                 with mock.patch.dict('os.environ',
-                                     {QISKIT_IBMQ_PROVIDER_LOG_LEVEL: invalid_log_level}):
+                                                 {QISKIT_IBMQ_PROVIDER_LOG_LEVEL: invalid_log_level}):
                     setup_logger(logger)
-                    self.assertEqual(logger.level, default_level_invalid,
-                                     'The logger level was set to {}, but it should '
-                                     'be {}.'.format(logger.level, default_level_invalid))
+                    self.assertEqual(
+                        logger.level,
+                        default_level_invalid,
+                        f'The logger level was set to {logger.level}, but it should be {default_level_invalid}.',
+                    )
 
     def test_valid_log_levels_mixed_casing(self):
         """Test setting up a logger with all valid levels, case insensitive."""
@@ -89,9 +95,11 @@ class TestLogger(IBMQTestCase):
             with self.subTest(level_name=level_name):
                 with mock.patch.dict('os.environ', {QISKIT_IBMQ_PROVIDER_LOG_LEVEL: level_name}):
                     setup_logger(logger)
-                    self.assertEqual(logger.level, level_value,
-                                     'The logger level was set to {}, but it should '
-                                     'be {}.'.format(logger.level, level_value))
+                    self.assertEqual(
+                        logger.level,
+                        level_value,
+                        f'The logger level was set to {logger.level}, but it should be {level_value}.',
+                    )
 
     # TODO: NamedTemporaryFiles do not support name in Windows
     @skipIf(os.name == 'nt', 'Test not supported in Windows')
@@ -107,16 +115,20 @@ class TestLogger(IBMQTestCase):
             with mock.patch.dict('os.environ', env_vars_to_patch):
                 setup_logger(logger)
 
-                self.assertEqual(logger.level, log_level_error[1],
-                                 'The logger level was set to {}, but it should '
-                                 'be {}.'.format(logger.level, log_level_error[1]))
+                self.assertEqual(
+                    logger.level,
+                    log_level_error[1],
+                    f'The logger level was set to {logger.level}, but it should be {log_level_error[1]}.',
+                )
 
                 # Assert the file handler was created.
                 self.assertTrue(logger.handlers,
                                 'A file handler should have been setup, but it was not.')
-                self.assertEqual(len(logger.handlers), 1,
-                                 'Many handlers were setup {}, but it should have only '
-                                 'been one.'.format(logger.handlers))
+                self.assertEqual(
+                    len(logger.handlers),
+                    1,
+                    f'Many handlers were setup {logger.handlers}, but it should have only been one.',
+                )
 
                 # Note that only messages >= `ERROR` will be logged.
                 logger.warning('This is a warning message that should not be logged in the file.')
@@ -125,8 +137,10 @@ class TestLogger(IBMQTestCase):
 
                 # Assert the file exists.
                 log_file_name = os.environ[QISKIT_IBMQ_PROVIDER_LOG_FILE]
-                self.assertTrue(os.path.exists(log_file_name),
-                                'The file {} does not exist.'.format(log_file_name))
+                self.assertTrue(
+                    os.path.exists(log_file_name),
+                    f'The file {log_file_name} does not exist.',
+                )
 
                 # Assert the messages were logged.
                 with open(temp_log_file.name) as file_:
@@ -138,10 +152,14 @@ class TestLogger(IBMQTestCase):
                     for substring, in_file in substrings_to_check.items():
                         with self.subTest(substring=substring):
                             if in_file:
-                                self.assertIn(substring, content_as_str,
-                                              'The substring "{}" was not found in the file {}.'
-                                              .format(substring, temp_log_file.name))
+                                self.assertIn(
+                                    substring,
+                                    content_as_str,
+                                    f'The substring "{substring}" was not found in the file {temp_log_file.name}.',
+                                )
                             else:
-                                self.assertNotIn(substring, content_as_str,
-                                                 'The substring "{}" was found in the file {}.'
-                                                 .format('debug message', temp_log_file.name))
+                                self.assertNotIn(
+                                    substring,
+                                    content_as_str,
+                                    f'The substring "debug message" was found in the file {temp_log_file.name}.',
+                                )

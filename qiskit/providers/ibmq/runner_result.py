@@ -45,29 +45,21 @@ class RunnerResult(Result, ResultDecoder):
         Raises:
             QiskitError: If experiment result doesn't contain quasiprobabilities.
         """
-        if experiment is None:
-            exp_keys = range(len(self.results))
-        else:
-            exp_keys = [experiment]  # type: ignore[assignment]
-
+        exp_keys = range(len(self.results)) if experiment is None else [experiment]
         dict_list = []
         for key in exp_keys:
-            if 'quasiprobabilities' in self.data(key).keys():
-                shots = self.results[key].shots
-                hex_quasi = self.results[key].data.quasiprobabilities
-                bit_lenth = len(self.results[key].header.final_measurement_mapping)
-                quasi = {}
-                for hkey, val in hex_quasi.items():
-                    quasi[_hex_to_bin(hkey).zfill(bit_lenth)] = val
+            if 'quasiprobabilities' not in self.data(key).keys():
+                raise QiskitError(f'No quasiprobabilities for experiment "{repr(key)}"')
 
-                out = QuasiDistribution(quasi, shots)
-                out.shots = shots
-                dict_list.append(out)
-            else:
-                raise QiskitError('No quasiprobabilities for experiment "{}"'.format(repr(key)))
-
+            shots = self.results[key].shots
+            hex_quasi = self.results[key].data.quasiprobabilities
+            bit_lenth = len(self.results[key].header.final_measurement_mapping)
+            quasi = {
+                _hex_to_bin(hkey).zfill(bit_lenth): val
+                for hkey, val in hex_quasi.items()
+            }
+            out = QuasiDistribution(quasi, shots)
+            out.shots = shots
+            dict_list.append(out)
         # Return first item of dict_list if size is 1
-        if len(dict_list) == 1:
-            return dict_list[0]
-        else:
-            return dict_list
+        return dict_list[0] if len(dict_list) == 1 else dict_list

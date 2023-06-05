@@ -105,7 +105,7 @@ class TestIQXDashboard(IBMQTestCase):
         for backend in self.backends:
             with self.subTest(backend=backend):
                 cred = backend.provider().credentials
-                provider_str = "{}/{}/{}".format(cred.hub, cred.group, cred.project)
+                provider_str = f"{cred.hub}/{cred.group}/{cred.project}"
                 b_w_p = BackendWithProviders(backend=backend, providers=[provider_str])
                 make_backend_widget(b_w_p)
 
@@ -127,8 +127,8 @@ def _get_backends(provider):
     backends = []
     n_qubits = [1, 5]
     for n_qb in n_qubits:
-        filtered_backends = provider.backends(
-            operational=True, simulator=False, n_qubits=n_qb)
-        if filtered_backends:
+        if filtered_backends := provider.backends(
+            operational=True, simulator=False, n_qubits=n_qb
+        ):
             backends.append(filtered_backends[0])
     return backends

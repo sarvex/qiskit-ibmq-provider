@@ -127,15 +127,12 @@ class TestIBMQBackend(IBMQTestCase):
         for start_dt, end_dt, should_find, name in sub_tests:
             with self.subTest(name=name):
                 f_reservs = backend.reservations(start_datetime=start_dt, end_datetime=end_dt)
-                found = False
-                for f_reserv in f_reservs:
-                    if f_reserv == reserv:
-                        found = True
-                        break
+                found = any(f_reserv == reserv for f_reserv in f_reservs)
                 self.assertEqual(
-                    found, should_find,
-                    "Reservation {} found={}, used start datetime {}, end datetime {}".format(
-                        reserv, found, start_dt, end_dt))
+                    found,
+                    should_find,
+                    f"Reservation {reserv} found={found}, used start datetime {start_dt}, end datetime {end_dt}",
+                )
 
     def test_run_qobj(self):
         """Test running a Qobj."""
@@ -229,7 +226,8 @@ class TestIBMQBackendService(IBMQTestCase):
             for attr in reserv.__dict__:
                 self.assertIsNotNone(
                     getattr(reserv, attr),
-                    "Reservation {} is missing attribute {}".format(reserv, attr))
+                    f"Reservation {reserv} is missing attribute {attr}",
+                )
 
     def test_deprecated_service(self):
         """Test deprecated backend service module."""

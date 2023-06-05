@@ -67,10 +67,10 @@ def make_labels() -> widgets.HBox:
     labels3 = widgets.HTML(value='<h5>Est. Start Time</h5>',
                            layout=widgets.Layout(width='100px'))
 
-    labels = widgets.HBox(children=[labels0, labels1, labels2, labels3],
-                          layout=widgets.Layout(width='700px',
-                                                margin='0px 0px 0px 35px'))
-    return labels
+    return widgets.HBox(
+        children=[labels0, labels1, labels2, labels3],
+        layout=widgets.Layout(width='700px', margin='0px 0px 0px 35px'),
+    )
 
 
 def create_job_widget(watcher: 'IQXDashboard',

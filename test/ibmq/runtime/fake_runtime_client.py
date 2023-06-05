@@ -235,9 +235,7 @@ class BaseFakeRuntimeClient:
 
     def list_programs(self, limit, skip):
         """List all programs."""
-        programs = []
-        for prog in self._programs.values():
-            programs.append(prog.to_dict())
+        programs = [prog.to_dict() for prog in self._programs.values()]
         return {"programs": programs[skip:limit+skip], "count": len(self._programs)}
 
     def program_create(self, program_data, name, description, max_execution_time,

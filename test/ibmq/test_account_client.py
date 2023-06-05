@@ -107,8 +107,7 @@ class TestAccountClient(IBMQTestCase):
         qobj = assemble(circuit, backend, shots=1)
         client = backend._api_client
 
-        exception_message = 'The access token in this exception ' \
-                            'message should be replaced: {}'.format(self.access_token)
+        exception_message = f'The access token in this exception message should be replaced: {self.access_token}'
         exception_traceback_str = ''
         try:
             with mock.patch.object(
@@ -191,12 +190,11 @@ class TestAccountClientJobs(IBMQTestCase):
         qc1 = QuantumCircuit(qr, cr, name='qc1')
         seed = 73846087
 
-        # Assemble the Qobj.
-        qobj = assemble(transpile([qc1], backend=backend,
-                                  seed_transpiler=seed),
-                        backend=backend, shots=1)
-
-        return qobj
+        return assemble(
+            transpile([qc1], backend=backend, seed_transpiler=seed),
+            backend=backend,
+            shots=1,
+        )
 
     def test_job_get(self):
         """Test job_get."""

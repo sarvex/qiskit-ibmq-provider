@@ -131,9 +131,7 @@ class Api(RestAdapterBase):
             JSON response of user information.
         """
         url = self.get_url('user_info')
-        response = self.session.get(url).json()
-
-        return response
+        return self.session.get(url).json()
 
     def reservations(self) -> List:
         """Return reservation information.
@@ -232,8 +230,7 @@ class Api(RestAdapterBase):
             JSON response.
         """
         url = self.get_url('experiment_devices')
-        raw_data = self.session.get(url).json()
-        return raw_data
+        return self.session.get(url).json()
 
     def experiment_upload(self, experiment: str) -> Dict:
         """Upload an experiment.
@@ -245,9 +242,9 @@ class Api(RestAdapterBase):
             JSON response.
         """
         url = self.get_url('experiments')
-        raw_data = self.session.post(url, data=experiment,
-                                     headers=self._HEADER_JSON_CONTENT).json()
-        return raw_data
+        return self.session.post(
+            url, data=experiment, headers=self._HEADER_JSON_CONTENT
+        ).json()
 
     def analysis_results(
             self,

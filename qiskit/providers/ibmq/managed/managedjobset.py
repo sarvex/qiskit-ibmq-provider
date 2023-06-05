@@ -70,7 +70,9 @@ class ManagedJobSet:
         self._managed_jobs = []  # type: List[ManagedJob]
         self._name = name or datetime.utcnow().isoformat()
         self._backend = None  # type: Optional[IBMQBackend]
-        self._id = short_id or uuid.uuid4().hex + '-' + str(time.time()).replace('.', '')
+        self._id = short_id or f'{uuid.uuid4().hex}-' + str(time.time()).replace(
+            '.', ''
+        )
         self._id_long = self._id_prefix + self._id + self._id_suffix
         self._tags = []  # type: List[str]
         self._job_submit_lock = threading.Lock()  # Used to synchronize job submit.
@@ -159,8 +161,8 @@ class ManagedJobSet:
 
         if not jobs:
             raise IBMQJobManagerUnknownJobSet(
-                '{} is not a known job set within the provider {}.'.format(
-                    self.job_set_id(), provider))
+                f'{self.job_set_id()} is not a known job set within the provider {provider}.'
+            )
 
         # Extract common information from the first job.
         first_job = jobs[0]
@@ -176,15 +178,16 @@ class ManagedJobSet:
             job_set_name, job_index = self._parse_job_name(job)
             if job_set_name != self._name or job.backend().name() != self._backend.name():
                 raise IBMQJobManagerInvalidStateError(
-                    'Job {} is tagged for the job set {} but does not appear '
-                    'to belong to the set.'.format(job.job_id(), self.job_set_id()))
+                    f'Job {job.job_id()} is tagged for the job set {self.job_set_id()} but does not appear to belong to the set.'
+                )
             jobs_dict[job_index] = job
 
         sorted_indexes = sorted(jobs_dict)
         # Verify we got all jobs.
         if sorted_indexes != list(range(len(sorted_indexes))):
             raise IBMQJobManagerInvalidStateError(
-                'Unable to retrieve all jobs for job set {}.'.format(self.job_set_id()))
+                f'Unable to retrieve all jobs for job set {self.job_set_id()}.'
+            )
 
         self._managed_jobs = []
         experiment_index = 0
@@ -218,10 +221,12 @@ class ManagedJobSet:
             A report on job statuses.
         """
         statuses = self.statuses()
-        report = ["Job set name: {}".format(self.name()),
-                  "          ID: {}".format(self.job_set_id()),
-                  "        tags: {}".format(self.tags()),
-                  "Summary report:"]
+        report = [
+            f"Job set name: {self.name()}",
+            f"          ID: {self.job_set_id()}",
+            f"        tags: {self.tags()}",
+            "Summary report:",
+        ]
         report.extend(format_status_counts(statuses))
 
         if detailed:
@@ -302,15 +307,15 @@ class ManagedJobSet:
                     success = False
             except IBMQJobTimeoutError as ex:
                 raise IBMQJobManagerTimeoutError(
-                    'Timeout while waiting for the results for experiments {}-{}.'.format(
-                        mjob.start_index, self._managed_jobs[-1].end_index)) from ex
+                    f'Timeout while waiting for the results for experiments {mjob.start_index}-{self._managed_jobs[-1].end_index}.'
+                ) from ex
 
             if timeout:
                 timeout = original_timeout - (time.time() - start_time)
                 if timeout <= 0:
                     raise IBMQJobManagerTimeoutError(
-                        'Timeout while waiting for the results for experiments {}-{}.'.format(
-                            mjob.start_index, self._managed_jobs[-1].end_index))
+                        f'Timeout while waiting for the results for experiments {mjob.start_index}-{self._managed_jobs[-1].end_index}.'
+                    )
 
         self._managed_results = ManagedResults(self, self._backend.name(), success)
 
@@ -333,14 +338,11 @@ class ManagedJobSet:
             msg_list = mjob.error_message()
             if not msg_list:
                 continue
-            report.append("Experiments {}-{}, job index={}, job ID={}:".format(
-                mjob.start_index, mjob.end_index, i, mjob.job.job_id()))
-            for msg in msg_list.split('\n'):
-                report.append(msg.rjust(len(msg)+2))
-
-        if not report:
-            return None
-        return '\n'.join(report)
+            report.append(
+                f"Experiments {mjob.start_index}-{mjob.end_index}, job index={i}, job ID={mjob.job.job_id()}:"
+            )
+            report.extend(msg.rjust(len(msg)+2) for msg in msg_list.split('\n'))
+        return None if not report else '\n'.join(report)
 
     @requires_submit
     def cancel(self) -> None:
@@ -401,7 +403,8 @@ class ManagedJobSet:
                         return job, i
 
         raise IBMQJobManagerJobNotFound(
-            'Unable to find the job for experiment {}.'.format(experiment))
+            f'Unable to find the job for experiment {experiment}.'
+        )
 
     @requires_submit
     def qobjs(self) -> List[Union[QasmQobj, PulseQobj]]:
@@ -551,10 +554,9 @@ class ManagedJobSet:
             IBMQJobManagerInvalidStateError: If the job does not have a proper
                 job name.
         """
-        matched = JOB_SET_NAME_RE.match(job.name())
-        if not matched:
+        if matched := JOB_SET_NAME_RE.match(job.name()):
+            return matched.group(1), int(matched.group(2))
+        else:
             raise IBMQJobManagerInvalidStateError(
-                'Job {} is tagged for the job set {} but does not '
-                'have a proper job name.'.format(job.job_id(), self.job_set_id()))
-
-        return matched.group(1), int(matched.group(2))
+                f'Job {job.job_id()} is tagged for the job set {self.job_set_id()} but does not have a proper job name.'
+            )

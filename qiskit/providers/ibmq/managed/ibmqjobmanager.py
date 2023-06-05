@@ -154,8 +154,8 @@ class IBMQJobManager:
 
         if not isinstance(backend, IBMQBackend):
             raise IBMQJobManagerInvalidStateError(
-                "IBMQJobManager only supports IBMQBackend. "
-                "{} is not an IBMQBackend.".format(backend))
+                f"IBMQJobManager only supports IBMQBackend. {backend} is not an IBMQBackend."
+            )
 
         experiment_list = self._split_experiments(
             experiments, backend=backend, max_experiments_per_job=max_experiments_per_job)
@@ -213,8 +213,7 @@ class IBMQJobManager:
         if detailed:
             report.append("\nDetail report:")
             for i, job_set in enumerate(self._job_sets):
-                report.append(("  Job set name: {}, ID: {}".format(
-                    job_set.name(), job_set.job_set_id())))
+                report.append(f"  Job set name: {job_set.name()}, ID: {job_set.job_set_id()}")
                 report.extend(format_job_details(
                     job_set_statuses[i], job_set.managed_jobs()))
 

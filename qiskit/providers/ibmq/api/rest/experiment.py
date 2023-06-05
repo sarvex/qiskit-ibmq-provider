@@ -37,7 +37,7 @@ class Experiment(RestAdapterBase):
             experiment_uuid: UUID of the experiment.
             url_prefix: URL prefix.
         """
-        super().__init__(session, '{}/experiments/{}'.format(url_prefix, experiment_uuid))
+        super().__init__(session, f'{url_prefix}/experiments/{experiment_uuid}')
 
     def retrieve(self) -> str:
         """Retrieve the specific experiment.
@@ -123,8 +123,10 @@ class ExperimentPlot(RestAdapterBase):
             plot_name: Name of the plot.
             url_prefix: URL prefix.
         """
-        super().__init__(session, '{}/experiments/{}/plots/{}'.format(
-            url_prefix, experiment_uuid, plot_name))
+        super().__init__(
+            session,
+            f'{url_prefix}/experiments/{experiment_uuid}/plots/{plot_name}',
+        )
         self.plot_name = plot_name
 
     def retrieve(self) -> bytes:

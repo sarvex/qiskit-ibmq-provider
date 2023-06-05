@@ -73,18 +73,14 @@ def format_status_counts(statuses: List[Union[JobStatus, None]]) -> List[str]:
         Formatted job status report.
     """
     counts = Counter(statuses)  # type: Counter
-    report = [
-        "       Total jobs: {}".format(len(statuses)),
-        "  Successful jobs: {}".format(counts[JobStatus.DONE]),
-        "      Failed jobs: {}".format(counts[JobStatus.ERROR]),
-        "   Cancelled jobs: {}".format(counts[JobStatus.CANCELLED]),
-        "     Running jobs: {}".format(counts[JobStatus.RUNNING]),
-        "     Pending jobs: {}".format(counts[JobStatus.INITIALIZING] +
-                                       counts[JobStatus.VALIDATING] +
-                                       counts[JobStatus.QUEUED])
+    return [
+        f"       Total jobs: {len(statuses)}",
+        f"  Successful jobs: {counts[JobStatus.DONE]}",
+        f"      Failed jobs: {counts[JobStatus.ERROR]}",
+        f"   Cancelled jobs: {counts[JobStatus.CANCELLED]}",
+        f"     Running jobs: {counts[JobStatus.RUNNING]}",
+        f"     Pending jobs: {counts[JobStatus.INITIALIZING] + counts[JobStatus.VALIDATING] + counts[JobStatus.QUEUED]}",
     ]
-
-    return report
 
 
 def format_job_details(
@@ -102,30 +98,29 @@ def format_job_details(
     """
     report = []
     for i, mjob in enumerate(managed_jobs):
-        report.append("  experiments: {}-{}".format(mjob.start_index, mjob.end_index))
-        report.append("    job index: {}".format(i))
+        report.extend(
+            (
+                f"  experiments: {mjob.start_index}-{mjob.end_index}",
+                f"    job index: {i}",
+            )
+        )
         if (mjob.job is None) and mjob.future \
                 and (not mjob.future.done()):  # type: ignore[unreachable]
-            report.append("    status: {}".format(  # type: ignore[unreachable]
-                JobStatus.INITIALIZING.value))
+            report.append(f"    status: {JobStatus.INITIALIZING.value}")
             continue
         if mjob.submit_error is not None:
-            report.append("    status: job submit failed: {}".format(
-                str(mjob.submit_error)))
+            report.append(f"    status: job submit failed: {str(mjob.submit_error)}")
             continue
 
         job = mjob.job
-        report.append("    job ID: {}".format(job.job_id()))
-        report.append("    name: {}".format(job.name()))
+        report.extend((f"    job ID: {job.job_id()}", f"    name: {job.name()}"))
         status_txt = statuses[i].value if statuses[i] else "Unknown"
-        report.append("    status: {}".format(status_txt))
+        report.append(f"    status: {status_txt}")
 
         if statuses[i] is JobStatus.QUEUED:
-            report.append("    queue position: {}".format(job.queue_position()))
+            report.append(f"    queue position: {job.queue_position()}")
         elif statuses[i] is JobStatus.ERROR:
             report.append("    error_message:")
             msg_list = job.error_message().split('\n')
-            for msg in msg_list:
-                report.append(msg.rjust(len(msg)+6))
-
+            report.extend(msg.rjust(len(msg)+6) for msg in msg_list)
     return report

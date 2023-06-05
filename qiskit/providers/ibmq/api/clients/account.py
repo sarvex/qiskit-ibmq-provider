@@ -301,7 +301,8 @@ class AccountClient(BaseClient):
             return self.job_get(job_id)['qObjectResult']
         except KeyError as err:
             raise ApiIBMQProtocolError(
-                'Unexpected return value received from the server: {}'.format(str(err))) from err
+                f'Unexpected return value received from the server: {str(err)}'
+            ) from err
 
     def _job_result_object_storage(self, job_id: str) -> Dict:
         """Retrieve and return the job result using object storage.
@@ -471,8 +472,7 @@ class AccountClient(BaseClient):
 
             elapsed_time = time.time() - start_time
             if timeout is not None and elapsed_time >= timeout:
-                raise UserTimeoutExceededError(
-                    'Timeout while waiting for job {}.'.format(job_id))
+                raise UserTimeoutExceededError(f'Timeout while waiting for job {job_id}.')
 
             logger.info('API job status = %s (%d seconds)',
                         status_response['status'], elapsed_time)

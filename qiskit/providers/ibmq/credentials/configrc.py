@@ -65,7 +65,8 @@ def read_credentials_from_qiskitrc(
         config_parser.read(filename)
     except ParsingError as ex:
         raise InvalidCredentialsFormatError(
-            'Error parsing file {}: {}'.format(filename, str(ex))) from ex
+            f'Error parsing file {filename}: {str(ex)}'
+        ) from ex
 
     # Build the credentials dictionary.
     credentials_dict: Dict[HubGroupProject, Credentials] = {}
@@ -86,12 +87,12 @@ def read_credentials_from_qiskitrc(
         # TODO: consider generalizing, moving to json configuration or a more
         # robust alternative.
         for key, val in single_section.items():
-            if key == 'proxies':
+            if key == 'default_provider':
+                configs[key] = HubGroupProject.from_stored_format(val)
+            elif key == 'proxies':
                 configs[key] = literal_eval(val)
             elif key == 'verify':
                 configs[key] = config_parser[name].getboolean('verify')
-            elif key == 'default_provider':
-                configs[key] = HubGroupProject.from_stored_format(val)
             else:
                 configs[key] = val
 
@@ -246,8 +247,9 @@ def remove_credentials(
     try:
         del stored_credentials[credentials.unique_id()]
     except KeyError:
-        raise CredentialsNotFoundError('The account {} does not exist in the configuration file.'
-                                       .format(credentials.unique_id())) from None
+        raise CredentialsNotFoundError(
+            f'The account {credentials.unique_id()} does not exist in the configuration file.'
+        ) from None
     write_qiskit_rc(credentials=stored_credentials, preferences=stored_preferences,
                     filename=filename)
 

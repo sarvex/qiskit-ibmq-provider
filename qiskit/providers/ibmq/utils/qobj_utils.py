@@ -32,14 +32,13 @@ def _serialize_noise_model(config: Dict[str, Any]) -> Dict[str, Any]:
     for k, v in config.items():
         if isinstance(config[k], dict):
             _serialize_noise_model(config[k])
-        else:
-            if k == 'noise_model':
-                try:
-                    config[k] = v.to_dict(serializable=True)
-                except AttributeError:
-                    # if .to_dict() fails is probably because the noise_model
-                    # has been already transformed elsewhere
-                    pass
+        elif k == 'noise_model':
+            try:
+                config[k] = v.to_dict(serializable=True)
+            except AttributeError:
+                # if .to_dict() fails is probably because the noise_model
+                # has been already transformed elsewhere
+                pass
 
     return config
 
